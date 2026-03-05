@@ -1,0 +1,62 @@
+name: leaf_reader
+description: "LeafReader - A premium DRM-free EPUB and PDF reader."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Database
+  sqflite: ^2.4.1
+  sqlite3_flutter_libs: ^0.5.28
+
+  # File handling
+  file_picker: ^8.1.6
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # EPUB parsing
+  epub_pro: ^5.6.0
+  html: ^0.15.5
+
+  # PDF
+  pdfrx: ^1.0.92
+
+  # UI and design
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+
+  # Utils
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  collection: ^1.19.1
+  equatable: ^2.0.7
+  shared_preferences: ^2.3.4
+  permission_handler: ^11.3.1
+
+  # TTS
+  flutter_tts: ^4.2.0
+
+  # Export
+  pdf: ^3.11.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/sample/
