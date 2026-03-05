@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:leaf_reader/core/constants/app_constants.dart';
-import 'package:leaf_reader/domain/entities/app_theme.dart';
-import 'package:leaf_reader/presentation/providers/app_providers.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/domain/entities/app_theme.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -89,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.download_rounded),
             title: const Text('Import backup'),
             subtitle: const Text(
-                'Restore from a LeafReader backup file'),
+                'Restore from a Textara backup file'),
             onTap: () => _importBackup(context, ref),
           ),
           const Divider(height: 32),
@@ -97,14 +97,14 @@ class SettingsScreen extends ConsumerWidget {
           _SectionHeader(title: 'About'),
           ListTile(
             leading: const Icon(Icons.info_outline_rounded),
-            title: const Text('LeafReader'),
+            title: const Text('Textara'),
             subtitle: Text('Version ${AppConstants.appVersion}'),
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: const Text('DRM-free only'),
             subtitle: const Text(
-                'LeafReader supports DRM-free EPUB and PDF files. It does not bypass or remove DRM.'),
+                'Textara supports DRM-free EPUB and PDF files. It does not bypass or remove DRM.'),
           ),
           const SizedBox(height: 32),
         ],

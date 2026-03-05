@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/reader_settings.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/reader_settings.dart';
 
 void main() {
   group('ReaderSettings', () {

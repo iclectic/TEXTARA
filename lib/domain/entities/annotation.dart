@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
+import 'package:textara/core/constants/enums.dart';
 
 class Highlight extends Equatable {
   final String id;

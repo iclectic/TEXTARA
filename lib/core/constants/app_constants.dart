@@ -1,7 +1,7 @@
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'LeafReader';
+  static const String appName = 'Textara';
   static const String appTagline = 'Your books, beautifully read.';
   static const String appVersion = '1.0.0';
 
@@ -35,6 +35,6 @@ class AppConstants {
   static const String prefKeyLowStimulation = 'low_stimulation';
   static const String prefKeyReaderDefaults = 'reader_defaults';
 
-  static const String backupFileExtension = 'leafreader';
+  static const String backupFileExtension = 'textara';
   static const String backupMimeType = 'application/json';
 }

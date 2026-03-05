@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/annotation.dart';
-import 'package:leaf_reader/data/database/database_helper.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/data/database/database_helper.dart';
 
 class AnnotationDao {
   final DatabaseHelper _dbHelper;

@@ -1,5 +1,5 @@
-name: leaf_reader
-description: "LeafReader - A premium DRM-free EPUB and PDF reader."
+name: textara
+description: "Textara - A premium DRM-free EPUB and PDF reader."
 publish_to: 'none'
 version: 1.0.0+1
 

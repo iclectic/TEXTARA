@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/domain/entities/annotation.dart';
-import 'package:leaf_reader/domain/entities/collection.dart';
-import 'package:leaf_reader/domain/entities/backup_data.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/domain/entities/collection.dart';
+import 'package:textara/domain/entities/backup_data.dart';
 
 void main() {
   group('BackupData', () {

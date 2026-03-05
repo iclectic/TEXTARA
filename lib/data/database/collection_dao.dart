@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:leaf_reader/domain/entities/collection.dart';
-import 'package:leaf_reader/data/database/database_helper.dart';
+import 'package:textara/domain/entities/collection.dart';
+import 'package:textara/data/database/database_helper.dart';
 
 class CollectionDao {
   final DatabaseHelper _dbHelper;

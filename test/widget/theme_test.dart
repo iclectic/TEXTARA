@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leaf_reader/domain/entities/app_theme.dart';
+import 'package:textara/domain/entities/app_theme.dart';
 
 void main() {
   group('BuiltInThemes', () {

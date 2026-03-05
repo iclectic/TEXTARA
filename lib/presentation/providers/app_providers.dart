@@ -1,20 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:leaf_reader/core/constants/app_constants.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/app_theme.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/domain/entities/annotation.dart';
-import 'package:leaf_reader/domain/entities/collection.dart';
-import 'package:leaf_reader/domain/entities/reader_settings.dart';
-import 'package:leaf_reader/data/database/database_helper.dart';
-import 'package:leaf_reader/data/database/book_dao.dart';
-import 'package:leaf_reader/data/database/annotation_dao.dart';
-import 'package:leaf_reader/data/database/collection_dao.dart';
-import 'package:leaf_reader/data/services/file_storage_service.dart';
-import 'package:leaf_reader/data/services/epub_parser_service.dart';
-import 'package:leaf_reader/data/services/import_service.dart';
-import 'package:leaf_reader/data/services/export_service.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/app_theme.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/domain/entities/collection.dart';
+import 'package:textara/domain/entities/reader_settings.dart';
+import 'package:textara/data/database/database_helper.dart';
+import 'package:textara/data/database/book_dao.dart';
+import 'package:textara/data/database/annotation_dao.dart';
+import 'package:textara/data/database/collection_dao.dart';
+import 'package:textara/data/services/file_storage_service.dart';
+import 'package:textara/data/services/epub_parser_service.dart';
+import 'package:textara/data/services/import_service.dart';
+import 'package:textara/data/services/export_service.dart';
 
 // Database and DAOs
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {

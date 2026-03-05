@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leaf_reader/main.dart';
+import 'package:textara/main.dart';
 
 void main() {
-  testWidgets('LeafReader app launches successfully', (WidgetTester tester) async {
+  testWidgets('Textara app launches successfully', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(child: LeafReaderApp()),
+      const ProviderScope(child: TextaraApp()),
     );
     await tester.pump();
 

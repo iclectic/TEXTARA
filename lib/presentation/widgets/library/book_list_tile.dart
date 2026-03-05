@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/core/constants/enums.dart';
 
 class BookListTile extends StatelessWidget {
   final Book book;

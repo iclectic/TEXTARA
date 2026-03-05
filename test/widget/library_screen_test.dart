@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/presentation/widgets/library/book_grid_tile.dart';
-import 'package:leaf_reader/presentation/widgets/library/book_list_tile.dart';
-import 'package:leaf_reader/presentation/widgets/library/library_empty_state.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/presentation/widgets/library/book_grid_tile.dart';
+import 'package:textara/presentation/widgets/library/book_list_tile.dart';
+import 'package:textara/presentation/widgets/library/library_empty_state.dart';
 
 void main() {
   group('LibraryEmptyState widget', () {

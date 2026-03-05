@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:leaf_reader/core/constants/app_constants.dart';
-import 'package:leaf_reader/presentation/screens/library/library_screen.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/presentation/screens/library/library_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -70,17 +70,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       Icons.auto_stories_rounded,
                       size: 44,
                       color: theme.colorScheme.primary,
-                      semanticLabel: 'LeafReader logo',
+                      semanticLabel: 'Textara logo',
                     ),
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Welcome to LeafReader',
+                    'Welcome to Textara',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                     textAlign: TextAlign.center,
-                    semanticsLabel: 'Welcome to LeafReader',
+                    semanticsLabel: 'Welcome to Textara',
                   ),
                   const SizedBox(height: 12),
                   Text(

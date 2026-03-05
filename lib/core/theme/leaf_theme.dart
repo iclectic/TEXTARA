@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:leaf_reader/domain/entities/app_theme.dart';
+import 'package:textara/domain/entities/app_theme.dart';
 
 class LeafTheme {
   LeafTheme._();

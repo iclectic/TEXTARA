@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/domain/entities/annotation.dart';
-import 'package:leaf_reader/presentation/providers/app_providers.dart';
-import 'package:leaf_reader/presentation/screens/reader/epub_reader_view.dart';
-import 'package:leaf_reader/presentation/screens/reader/pdf_reader_view.dart';
-import 'package:leaf_reader/presentation/widgets/reader/reader_app_bar.dart';
-import 'package:leaf_reader/presentation/widgets/reader/reader_bottom_bar.dart';
-import 'package:leaf_reader/presentation/widgets/reader/reader_settings_sheet.dart';
-import 'package:leaf_reader/presentation/widgets/reader/annotations_sheet.dart';
-import 'package:leaf_reader/presentation/widgets/reader/toc_sheet.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
+import 'package:textara/presentation/screens/reader/epub_reader_view.dart';
+import 'package:textara/presentation/screens/reader/pdf_reader_view.dart';
+import 'package:textara/presentation/widgets/reader/reader_app_bar.dart';
+import 'package:textara/presentation/widgets/reader/reader_bottom_bar.dart';
+import 'package:textara/presentation/widgets/reader/reader_settings_sheet.dart';
+import 'package:textara/presentation/widgets/reader/annotations_sheet.dart';
+import 'package:textara/presentation/widgets/reader/toc_sheet.dart';
 
 class ReaderScreen extends ConsumerStatefulWidget {
   final Book book;

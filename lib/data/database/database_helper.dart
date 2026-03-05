@@ -17,7 +17,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final dir = await getApplicationDocumentsDirectory();
-    final path = p.join(dir.path, 'leaf_reader.db');
+    final path = p.join(dir.path, 'textara.db');
     return await openDatabase(
       path,
       version: 1,

@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/data/database/book_dao.dart';
-import 'package:leaf_reader/data/database/database_helper.dart';
-import 'package:leaf_reader/data/services/file_storage_service.dart';
-import 'package:leaf_reader/data/services/epub_parser_service.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/data/database/book_dao.dart';
+import 'package:textara/data/database/database_helper.dart';
+import 'package:textara/data/services/file_storage_service.dart';
+import 'package:textara/data/services/epub_parser_service.dart';
 
 class ImportResult {
   final bool success;
@@ -68,7 +68,7 @@ class ImportService {
         return const ImportResult(
           success: false,
           errorMessage:
-              'Unsupported file format. LeafReader supports EPUB and PDF files.',
+              'Unsupported file format. Textara supports EPUB and PDF files.',
         );
       }
 

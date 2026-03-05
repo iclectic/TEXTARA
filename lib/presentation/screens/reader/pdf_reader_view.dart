@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfrx/pdfrx.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
+import 'package:textara/domain/entities/book.dart';
 
 class PdfReaderView extends ConsumerStatefulWidget {
   final Book book;

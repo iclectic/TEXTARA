@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/presentation/providers/app_providers.dart';
-import 'package:leaf_reader/presentation/widgets/library/book_grid_tile.dart';
-import 'package:leaf_reader/presentation/widgets/library/book_list_tile.dart';
-import 'package:leaf_reader/presentation/widgets/library/library_empty_state.dart';
-import 'package:leaf_reader/presentation/widgets/library/sort_bottom_sheet.dart';
-import 'package:leaf_reader/presentation/screens/reader/reader_screen.dart';
-import 'package:leaf_reader/presentation/screens/settings/settings_screen.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
+import 'package:textara/presentation/widgets/library/book_grid_tile.dart';
+import 'package:textara/presentation/widgets/library/book_list_tile.dart';
+import 'package:textara/presentation/widgets/library/library_empty_state.dart';
+import 'package:textara/presentation/widgets/library/sort_bottom_sheet.dart';
+import 'package:textara/presentation/screens/reader/reader_screen.dart';
+import 'package:textara/presentation/screens/settings/settings_screen.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});

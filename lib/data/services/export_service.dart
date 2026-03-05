@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:leaf_reader/core/constants/app_constants.dart';
-import 'package:leaf_reader/domain/entities/backup_data.dart';
-import 'package:leaf_reader/data/database/book_dao.dart';
-import 'package:leaf_reader/data/database/annotation_dao.dart';
-import 'package:leaf_reader/data/database/collection_dao.dart';
-import 'package:leaf_reader/data/database/database_helper.dart';
-import 'package:leaf_reader/data/services/file_storage_service.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/domain/entities/backup_data.dart';
+import 'package:textara/data/database/book_dao.dart';
+import 'package:textara/data/database/annotation_dao.dart';
+import 'package:textara/data/database/collection_dao.dart';
+import 'package:textara/data/database/database_helper.dart';
+import 'package:textara/data/services/file_storage_service.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -48,7 +48,7 @@ class ExportService {
         const JsonEncoder.withIndent('  ').convert(backup.toJson());
     final timestamp =
         DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
-    final fileName = 'leafreader_backup_$timestamp.json';
+    final fileName = 'textara_backup_$timestamp.json';
     final exportPath = await _fileStorage.getExportPath(fileName);
     final file = File(exportPath);
     await file.writeAsString(jsonString);
@@ -92,7 +92,7 @@ class ExportService {
     buffer.writeln('# Highlights and Notes');
     buffer.writeln('## $bookTitle');
     buffer.writeln();
-    buffer.writeln('Exported from LeafReader on ${DateTime.now().toLocal()}');
+    buffer.writeln('Exported from Textara on ${DateTime.now().toLocal()}');
     buffer.writeln();
 
     for (final h in highlights) {
@@ -137,7 +137,7 @@ class ExportService {
             pw.Text(bookTitle, style: const pw.TextStyle(fontSize: 18)),
             pw.SizedBox(height: 8),
             pw.Text(
-                'Exported from LeafReader on ${DateTime.now().toLocal().toString().split('.').first}',
+                'Exported from Textara on ${DateTime.now().toLocal().toString().split('.').first}',
                 style: const pw.TextStyle(fontSize: 10)),
             pw.SizedBox(height: 20),
           ];

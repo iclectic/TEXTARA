@@ -1,4 +1,4 @@
-package com.textara.leaf_reader
+package com.textara.textara
 
 import io.flutter.embedding.android.FlutterActivity
 

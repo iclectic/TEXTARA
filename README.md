@@ -1,4 +1,4 @@
-# LeafReader
+# Textara
 
 A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessible, and fully offline.
 
@@ -14,7 +14,7 @@ A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessibl
 
 1. **Clone and enter the project**
    ```bash
-   cd leaf_reader
+   cd textara
    ```
 
 2. **Install dependencies**
@@ -43,7 +43,7 @@ A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessibl
 
 ## Project Architecture
 
-LeafReader follows a clean layered architecture:
+Textara follows a clean layered architecture:
 
 ```
 lib/
@@ -152,7 +152,7 @@ flutter test test/widget/
 - Text-to-speech for EPUB (play, pause, speed, voice selection)
 - Dictionary lookup (long-press to define, offline where possible)
 - Drag-and-drop import on tablets
-- Share-to-LeafReader import flow
+- Share-to-Textara import flow
 - Collections management UI
 - Metadata editing (title, author, cover)
 - Theme pack customisation (accent colour, background texture, highlight palette)
@@ -167,9 +167,9 @@ flutter test test/widget/
 
 ## Store Listing Draft
 
-**LeafReader: Your Books, Beautifully Read**
+**Textara: Your Books, Beautifully Read**
 
-LeafReader is a thoughtfully crafted reading app for your DRM-free EPUB and PDF library. No accounts, no ads, no internet required.
+Textara is a thoughtfully crafted reading app for your DRM-free EPUB and PDF library. No accounts, no ads, no internet required.
 
 Import your books and enjoy a premium reading experience with deep customisation: choose from 8 handcrafted themes, adjust typography to your preference, and read comfortably with accessibility modes designed for every reader.
 

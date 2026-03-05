@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leaf_reader/core/constants/app_constants.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/presentation/providers/app_providers.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
 
 class ReaderSettingsSheet extends ConsumerWidget {
   final ScrollController scrollController;

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/book.dart';
 
 void main() {
   group('Book entity', () {

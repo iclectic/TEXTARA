@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leaf_reader/core/constants/enums.dart';
-import 'package:leaf_reader/domain/entities/annotation.dart';
+import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/annotation.dart';
 
 void main() {
   group('Highlight entity', () {

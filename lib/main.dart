@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:leaf_reader/core/constants/app_constants.dart';
-import 'package:leaf_reader/core/theme/leaf_theme.dart';
-import 'package:leaf_reader/domain/entities/app_theme.dart';
-import 'package:leaf_reader/presentation/providers/app_providers.dart';
-import 'package:leaf_reader/presentation/screens/onboarding/onboarding_screen.dart';
-import 'package:leaf_reader/presentation/screens/library/library_screen.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/core/theme/leaf_theme.dart';
+import 'package:textara/domain/entities/app_theme.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
+import 'package:textara/presentation/screens/onboarding/onboarding_screen.dart';
+import 'package:textara/presentation/screens/library/library_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,17 +27,17 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
-  runApp(const ProviderScope(child: LeafReaderApp()));
+  runApp(const ProviderScope(child: TextaraApp()));
 }
 
-class LeafReaderApp extends ConsumerStatefulWidget {
-  const LeafReaderApp({super.key});
+class TextaraApp extends ConsumerStatefulWidget {
+  const TextaraApp({super.key});
 
   @override
-  ConsumerState<LeafReaderApp> createState() => _LeafReaderAppState();
+  ConsumerState<TextaraApp> createState() => _TextaraAppState();
 }
 
-class _LeafReaderAppState extends ConsumerState<LeafReaderApp> {
+class _TextaraAppState extends ConsumerState<TextaraApp> {
   bool _isFirstRun = true;
   bool _isLoading = true;
 

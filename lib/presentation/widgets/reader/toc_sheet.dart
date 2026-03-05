@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leaf_reader/domain/entities/book.dart';
-import 'package:leaf_reader/domain/entities/epub_content.dart';
-import 'package:leaf_reader/presentation/providers/app_providers.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/epub_content.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
 
 class TocSheet extends ConsumerStatefulWidget {
   final Book book;

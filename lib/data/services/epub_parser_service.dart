@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:epub_pro/epub_pro.dart';
 import 'package:html/parser.dart' as html_parser;
-import 'package:leaf_reader/domain/entities/epub_content.dart';
+import 'package:textara/domain/entities/epub_content.dart';
 
 class EpubParserService {
   Future<EpubBook> parseEpub(String filePath) async {
