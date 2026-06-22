@@ -63,11 +63,13 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     final exportService = ref.read(exportServiceProvider);
     try {
       final path = await exportService.exportHighlightsToMarkdown(
-          widget.bookId, widget.bookTitle);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exported to: $path')),
+        widget.bookId,
+        widget.bookTitle,
       );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Exported to: $path')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,11 +83,13 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     final exportService = ref.read(exportServiceProvider);
     try {
       final path = await exportService.exportHighlightsToPdf(
-          widget.bookId, widget.bookTitle);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exported to: $path')),
+        widget.bookId,
+        widget.bookTitle,
       );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Exported to: $path')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,39 +177,51 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                 highlightsAsync.when(
                   data: (highlights) => highlights.isEmpty
                       ? _buildEmptyState(
-                          theme, 'No highlights yet', 'Select text whilst reading to add highlights.')
+                          theme,
+                          'No highlights yet',
+                          'Select text whilst reading to add highlights.',
+                        )
                       : ListView.separated(
                           controller: widget.scrollController,
                           padding: const EdgeInsets.all(16),
                           itemCount: highlights.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (context, index) =>
                               const SizedBox(height: 8),
                           itemBuilder: (_, index) =>
                               _buildHighlightTile(highlights[index], theme),
                         ),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => _buildEmptyState(
-                      theme, 'Error', 'Could not load highlights.'),
+                  error: (error, stackTrace) => _buildEmptyState(
+                    theme,
+                    'Error',
+                    'Could not load highlights.',
+                  ),
                 ),
                 // Bookmarks tab
                 bookmarksAsync.when(
                   data: (bookmarks) => bookmarks.isEmpty
                       ? _buildEmptyState(
-                          theme, 'No bookmarks yet', 'Tap the bookmark icon to save your place.')
+                          theme,
+                          'No bookmarks yet',
+                          'Tap the bookmark icon to save your place.',
+                        )
                       : ListView.separated(
                           controller: widget.scrollController,
                           padding: const EdgeInsets.all(16),
                           itemCount: bookmarks.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (context, index) =>
                               const SizedBox(height: 8),
                           itemBuilder: (_, index) =>
                               _buildBookmarkTile(bookmarks[index], theme),
                         ),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => _buildEmptyState(
-                      theme, 'Error', 'Could not load bookmarks.'),
+                  error: (error, stackTrace) => _buildEmptyState(
+                    theme,
+                    'Error',
+                    'Could not load bookmarks.',
+                  ),
                 ),
               ],
             ),
@@ -266,8 +282,7 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                   child: Text(
                     highlight.createdAt.toLocal().toString().split('.').first,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       fontSize: 11,
                     ),
                   ),
@@ -292,8 +307,9 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _highlightColourValue(highlight.colour)
-                    .withValues(alpha: 0.15),
+                color: _highlightColourValue(
+                  highlight.colour,
+                ).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -319,8 +335,9 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                     child: Text(
                       highlight.note!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                   ),
@@ -359,9 +376,7 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
         trailing: InkWell(
           onTap: () async {
             HapticFeedback.lightImpact();
-            await ref
-                .read(annotationDaoProvider)
-                .deleteBookmark(bookmark.id);
+            await ref.read(annotationDaoProvider).deleteBookmark(bookmark.id);
             ref.invalidate(bookBookmarksProvider(widget.bookId));
           },
           child: Icon(

@@ -89,6 +89,67 @@ void main() {
       expect(invalid.isValid, false);
     });
 
+    test('validationIssues reports duplicate book ids', () {
+      final invalid = BackupData(
+        version: '1.0.0',
+        exportedAt: DateTime.now(),
+        books: [
+          sampleBook,
+          sampleBook.copyWith(title: 'Duplicate'),
+        ],
+        highlights: [],
+        bookmarks: [],
+        collections: [],
+      );
+
+      expect(invalid.isValid, false);
+      expect(
+        invalid.validationIssues,
+        contains('Duplicate book ID found: book-1.'),
+      );
+    });
+
+    test('validationIssues reports orphaned annotations', () {
+      final orphanHighlight = sampleHighlight.copyWith(bookId: 'missing-book');
+      final orphanBookmark = sampleBookmark.copyWith(bookId: 'missing-book');
+      final invalid = BackupData(
+        version: '1.0.0',
+        exportedAt: DateTime.now(),
+        books: [sampleBook],
+        highlights: [orphanHighlight],
+        bookmarks: [orphanBookmark],
+        collections: [],
+      );
+
+      expect(invalid.isValid, false);
+      expect(
+        invalid.validationIssues,
+        containsAll([
+          'A highlight references a missing book.',
+          'A bookmark references a missing book.',
+        ]),
+      );
+    });
+
+    test('validationIssues reports missing referenced collections', () {
+      final invalid = BackupData(
+        version: '1.0.0',
+        exportedAt: DateTime.now(),
+        books: [
+          sampleBook.copyWith(collectionIds: ['missing-collection']),
+        ],
+        highlights: [],
+        bookmarks: [],
+        collections: [sampleCollection],
+      );
+
+      expect(invalid.isValid, false);
+      expect(
+        invalid.validationIssues,
+        contains('Book "Test Book" references a missing collection.'),
+      );
+    });
+
     test('toJson produces valid JSON map', () {
       final json = backup.toJson();
       expect(json['version'], '1.0.0');
@@ -141,10 +202,7 @@ void main() {
         'version': '1.0.0',
         'exportedAt': '2025-03-01T00:00:00.000',
         'books': [
-          {
-            'id': 'partial-book',
-            'filePath': '/test.epub',
-          }
+          {'id': 'partial-book', 'filePath': '/test.epub'},
         ],
         'highlights': [],
         'bookmarks': [],

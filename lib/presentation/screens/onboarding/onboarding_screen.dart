@@ -19,9 +19,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefKeyFirstRun, false);
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LibraryScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const LibraryScreen()));
   }
 
   Future<void> _importSample() async {
@@ -31,12 +31,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // Simulate importing a sample book
     await Future.delayed(const Duration(milliseconds: 800));
 
+    if (!mounted) return;
     setState(() => _importing = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-            'Sample book imported successfully. You can also import your own EPUB and PDF files.'),
+          'Sample book imported successfully. You can also import your own EPUB and PDF files.',
+        ),
       ),
     );
 
@@ -173,11 +175,7 @@ class _FeatureRow extends StatelessWidget {
             color: theme.colorScheme.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
+          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
         ),
         const SizedBox(width: 16),
         Expanded(

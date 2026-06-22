@@ -12,8 +12,14 @@ class ImportResult {
   final bool success;
   final Book? book;
   final String? errorMessage;
+  final String? fileName;
 
-  const ImportResult({required this.success, this.book, this.errorMessage});
+  const ImportResult({
+    required this.success,
+    this.book,
+    this.errorMessage,
+    this.fileName,
+  });
 }
 
 class ImportService {
@@ -54,19 +60,22 @@ class ImportService {
   }
 
   Future<ImportResult> importFile(String filePath) async {
+    final fileName = _extractFileName(filePath);
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        return const ImportResult(
+        return ImportResult(
           success: false,
+          fileName: fileName,
           errorMessage: 'File not found. It may have been moved or deleted.',
         );
       }
 
       final ext = filePath.split('.').last.toLowerCase();
       if (ext != 'epub' && ext != 'pdf') {
-        return const ImportResult(
+        return ImportResult(
           success: false,
+          fileName: fileName,
           errorMessage:
               'Unsupported file format. Textara supports EPUB and PDF files.',
         );
@@ -75,16 +84,18 @@ class ImportService {
       final bookId = _uuid.v4();
       final format = ext == 'epub' ? BookFormat.epub : BookFormat.pdf;
 
-      final destPath = await _fileStorage.copyBookToLibrary(filePath, bookId);
-      final fileSize = await _fileStorage.getFileSize(destPath);
+      String? destPath;
+      String? coverPath;
 
       String title = _extractFileNameWithoutExtension(filePath);
       String author = 'Unknown Author';
       String? description;
-      String? coverPath;
       String? language;
       String? publisher;
       int totalPages = 0;
+
+      destPath = await _fileStorage.copyBookToLibrary(filePath, bookId);
+      final fileSize = await _fileStorage.getFileSize(destPath);
 
       if (format == BookFormat.epub) {
         try {
@@ -103,8 +114,25 @@ class ImportService {
 
           await _indexEpubContent(bookId, epubBook);
         } catch (e) {
-          // Parsing failed but we still have the file
+          await _fileStorage.deleteBookFile(destPath);
+          await _fileStorage.deleteCoverFile(coverPath);
+          return ImportResult(
+            success: false,
+            fileName: fileName,
+            errorMessage:
+                'Could not read this EPUB. It may be damaged or unsupported.',
+          );
         }
+      }
+
+      if (await _isLikelyDuplicate(title, format, fileSize)) {
+        await _fileStorage.deleteBookFile(destPath);
+        await _fileStorage.deleteCoverFile(coverPath);
+        return ImportResult(
+          success: false,
+          fileName: fileName,
+          errorMessage: 'This book appears to already be in your library.',
+        );
       }
 
       final book = Book(
@@ -123,10 +151,11 @@ class ImportService {
       );
 
       await _bookDao.insertBook(book);
-      return ImportResult(success: true, book: book);
+      return ImportResult(success: true, book: book, fileName: fileName);
     } catch (e) {
       return ImportResult(
         success: false,
+        fileName: fileName,
         errorMessage: 'Import failed: ${e.toString()}',
       );
     }
@@ -152,11 +181,33 @@ class ImportService {
   }
 
   String _extractFileNameWithoutExtension(String path) {
-    final fileName = path.split('/').last.split('\\').last;
+    final fileName = _extractFileName(path);
     final dotIndex = fileName.lastIndexOf('.');
     if (dotIndex > 0) {
       return fileName.substring(0, dotIndex);
     }
     return fileName;
+  }
+
+  String _extractFileName(String path) {
+    return path.split('/').last.split('\\').last;
+  }
+
+  Future<bool> _isLikelyDuplicate(
+    String title,
+    BookFormat format,
+    int fileSizeBytes,
+  ) async {
+    final normalizedTitle = _normalizeTitle(title);
+    final existingBooks = await _bookDao.getAllBooks();
+    return existingBooks.any((book) {
+      return book.format == format &&
+          book.fileSizeBytes == fileSizeBytes &&
+          _normalizeTitle(book.title) == normalizedTitle;
+    });
+  }
+
+  String _normalizeTitle(String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   }
 }

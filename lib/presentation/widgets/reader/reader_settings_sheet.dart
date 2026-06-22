@@ -64,7 +64,7 @@ class ReaderSettingsSheet extends ConsumerWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _fontFamilies.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final font = _fontFamilies[index];
                 final isSelected = settings.fontFamily == font && !dyslexia;
@@ -198,12 +198,7 @@ class _SliderRow extends StatelessWidget {
             ),
           ],
         ),
-        Slider(
-          value: value,
-          min: min,
-          max: max,
-          onChanged: onChanged,
-        ),
+        Slider(value: value, min: min, max: max, onChanged: onChanged),
       ],
     );
   }
