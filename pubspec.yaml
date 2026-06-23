@@ -32,7 +32,6 @@ dependencies:
   pdfrx: ^1.0.92
 
   # UI and design
-  google_fonts: ^6.2.1
   shimmer: ^3.0.0
 
   # Utils

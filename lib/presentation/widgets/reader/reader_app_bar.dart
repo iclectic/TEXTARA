@@ -35,10 +35,14 @@ class ReaderAppBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: onBack,
-              tooltip: 'Back to library',
+            Semantics(
+              button: true,
+              label: 'Back to library',
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: onBack,
+                tooltip: 'Back to library',
+              ),
             ),
             const SizedBox(width: 4),
             Expanded(
@@ -51,15 +55,23 @@ class ReaderAppBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.bookmark_add_outlined),
-              onPressed: onBookmark,
-              tooltip: 'Add bookmark',
+            Semantics(
+              button: true,
+              label: 'Add bookmark at current reading position',
+              child: IconButton(
+                icon: const Icon(Icons.bookmark_add_outlined),
+                onPressed: onBookmark,
+                tooltip: 'Add bookmark',
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.text_fields_rounded),
-              onPressed: onSettings,
-              tooltip: 'Reader settings',
+            Semantics(
+              button: true,
+              label: 'Open reader typography and layout settings',
+              child: IconButton(
+                icon: const Icon(Icons.text_fields_rounded),
+                onPressed: onSettings,
+                tooltip: 'Reader settings',
+              ),
             ),
           ],
         ),

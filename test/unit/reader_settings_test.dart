@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
 
 void main() {
   group('ReaderSettings', () {
@@ -18,10 +21,7 @@ void main() {
 
     test('copyWith updates specified fields only', () {
       const settings = ReaderSettings();
-      final updated = settings.copyWith(
-        fontSize: 20.0,
-        lineHeight: 2.0,
-      );
+      final updated = settings.copyWith(fontSize: 20.0, lineHeight: 2.0);
       expect(updated.fontSize, 20.0);
       expect(updated.lineHeight, 2.0);
       expect(updated.fontFamily, 'Literata');
@@ -88,5 +88,23 @@ void main() {
       final c = a.copyWith(fontSize: 20.0);
       expect(a, isNot(equals(c)));
     });
+
+    test(
+      'ReaderSettingsNotifier persists changes to shared preferences',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+
+        final notifier = ReaderSettingsNotifier();
+        notifier.setFontSize(21);
+        notifier.setLineHeight(1.9);
+
+        final prefs = await SharedPreferences.getInstance();
+        final raw = prefs.getString(AppConstants.prefKeyReaderDefaults);
+
+        expect(raw, isNotNull);
+        expect(raw, contains('"fontSize":21.0'));
+        expect(raw, contains('"lineHeight":1.9'));
+      },
+    );
   });
 }

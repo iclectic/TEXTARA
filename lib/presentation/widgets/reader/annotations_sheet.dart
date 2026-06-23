@@ -98,6 +98,26 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     }
   }
 
+  Future<void> _exportToJson() async {
+    HapticFeedback.mediumImpact();
+    final exportService = ref.read(exportServiceProvider);
+    try {
+      final path = await exportService.exportHighlightsToJson(
+        widget.bookId,
+        widget.bookTitle,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Exported to: $path')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Export failed. Please try again.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -145,6 +165,7 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                       onSelected: (value) {
                         if (value == 'markdown') _exportToMarkdown();
                         if (value == 'pdf') _exportToPdf();
+                        if (value == 'json') _exportToJson();
                       },
                       itemBuilder: (_) => [
                         const PopupMenuItem(
@@ -154,6 +175,10 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                         const PopupMenuItem(
                           value: 'pdf',
                           child: Text('Export to PDF'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'json',
+                          child: Text('Export to JSON'),
                         ),
                       ],
                     ),
@@ -262,92 +287,165 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
   Widget _buildHighlightTile(Highlight highlight, ThemeData theme) {
     return Card(
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: _highlightColourValue(highlight.colour),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    highlight.createdAt.toLocal().toString().split('.').first,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                      fontSize: 11,
+      child: InkWell(
+        onTap: () => _showHighlightEditor(highlight),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: _highlightColourValue(highlight.colour),
+                      borderRadius: BorderRadius.circular(3),
                     ),
                   ),
-                ),
-                InkWell(
-                  onTap: () async {
-                    HapticFeedback.lightImpact();
-                    await ref
-                        .read(annotationDaoProvider)
-                        .deleteHighlight(highlight.id);
-                    ref.invalidate(bookHighlightsProvider(widget.bookId));
-                  },
-                  child: Icon(
-                    Icons.delete_outline_rounded,
-                    size: 18,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: _highlightColourValue(
-                  highlight.colour,
-                ).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                highlight.selectedText,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontStyle: FontStyle.italic,
-                  height: 1.5,
-                ),
-              ),
-            ),
-            if (highlight.hasNote) ...[
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.sticky_note_2_outlined,
-                    size: 14,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      highlight.note!,
+                      highlight.createdAt.toLocal().toString().split('.').first,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
+                          alpha: 0.4,
+                        ),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  Tooltip(
+                    message: highlight.hasNote ? 'Edit note' : 'Add note',
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        highlight.hasNote
+                            ? Icons.edit_note_rounded
+                            : Icons.note_add_outlined,
+                        size: 18,
+                      ),
+                      color: theme.colorScheme.primary,
+                      onPressed: () => _showHighlightEditor(highlight),
+                    ),
+                  ),
+                  Tooltip(
+                    message: 'Delete highlight',
+                    child: InkWell(
+                      onTap: () async {
+                        HapticFeedback.lightImpact();
+                        await ref
+                            .read(annotationDaoProvider)
+                            .deleteHighlight(highlight.id);
+                        ref.invalidate(bookHighlightsProvider(widget.bookId));
+                      },
+                      child: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.3,
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: _highlightColourValue(
+                    highlight.colour,
+                  ).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  highlight.selectedText,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              if (highlight.hasNote) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.sticky_note_2_outlined,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        highlight.note!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _showHighlightEditor(Highlight highlight) async {
+    HapticFeedback.selectionClick();
+    final controller = TextEditingController(text: highlight.note ?? '');
+    final note = await showDialog<String?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Highlight note'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            minLines: 3,
+            maxLines: 6,
+            textInputAction: TextInputAction.newline,
+            decoration: const InputDecoration(
+              hintText: 'Add a note for this highlight',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(''),
+              child: const Text('Clear'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(controller.text),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+
+    if (note == null) return;
+
+    final trimmedNote = note.trim();
+    final updated = highlight.copyWith(
+      note: trimmedNote.isEmpty ? '' : trimmedNote,
+      updatedAt: DateTime.now(),
+    );
+    await ref.read(annotationDaoProvider).updateHighlight(updated);
+    ref.invalidate(bookHighlightsProvider(widget.bookId));
   }
 
   Widget _buildBookmarkTile(Bookmark bookmark, ThemeData theme) {

@@ -6,7 +6,13 @@ import 'package:textara/domain/entities/book.dart';
 
 class PdfReaderView extends ConsumerStatefulWidget {
   final Book book;
-  final void Function(int page, int total, String chapterTitle) onPageChanged;
+  final void Function(
+    int page,
+    int total,
+    String chapterTitle, {
+    String? chapterId,
+  })
+  onPageChanged;
 
   const PdfReaderView({
     super.key,
@@ -105,11 +111,7 @@ class _PdfReaderViewState extends ConsumerState<PdfReaderView> {
         backgroundColor: theme.scaffoldBackgroundColor,
         onPageChanged: (pageNumber) {
           if (pageNumber != null) {
-            widget.onPageChanged(
-              pageNumber,
-              _totalPages,
-              'Page $pageNumber',
-            );
+            widget.onPageChanged(pageNumber, _totalPages, 'Page $pageNumber');
           }
         },
         onViewerReady: (document, controller) {

@@ -177,6 +177,25 @@ class ExportService {
     return exportPath;
   }
 
+  Future<String> exportHighlightsToJson(String bookId, String bookTitle) async {
+    final highlights = await _annotationDao.getHighlightsForBook(bookId);
+    final payload = {
+      'bookId': bookId,
+      'bookTitle': bookTitle,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'highlights': highlights.map((highlight) => highlight.toJson()).toList(),
+    };
+
+    final fileName =
+        '${bookTitle.replaceAll(RegExp(r'[^\w\s]'), '')}_highlights.json';
+    final exportPath = await _fileStorage.getExportPath(fileName);
+    final file = File(exportPath);
+    await file.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(payload),
+    );
+    return exportPath;
+  }
+
   Future<String> exportHighlightsToPdf(String bookId, String bookTitle) async {
     final highlights = await _annotationDao.getHighlightsForBook(bookId);
 

@@ -129,7 +129,7 @@ void main() {
         readingProgress: 1.5,
         dateAdded: DateTime.now(),
       );
-      expect(overProgress.formattedProgress, '150%');
+      expect(overProgress.formattedProgress, '100%');
 
       final negativeProgress = Book(
         id: 'neg',
@@ -140,7 +140,7 @@ void main() {
         readingProgress: -0.1,
         dateAdded: DateTime.now(),
       );
-      expect(negativeProgress.formattedProgress, '-10%');
+      expect(negativeProgress.formattedProgress, '0%');
     });
   });
 }

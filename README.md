@@ -48,22 +48,22 @@ The app currently uses Riverpod providers directly over DAOs and services. A rep
 
 ### Reader
 
-- EPUB reading through Flutter-native text widgets.
+- EPUB reading through Flutter-native text widgets with estimated reflow pages.
 - PDF reading through `pdfrx`.
 - Reader controls for progress, bookmarks, table of contents, annotations sheet, and typography settings.
 - Font size, line height, margin, alignment, and hyphenation settings.
 - Basic reading progress persistence.
+- Table-of-contents navigation for EPUB chapters.
 
-Important EPUB limitation: the current EPUB reader treats each chapter as a horizontally paged item with vertical scrolling inside the chapter. It is not yet a premium reflow pagination engine.
+Important EPUB limitation: the current EPUB reader measures Flutter text against the active viewport and reader settings for pagination. It is stronger than estimated character paging, but still does not provide full EPUB CSS/layout fidelity.
 
 ### Annotations and Export
 
 - Bookmark creation from the reader.
-- Highlight and note data models.
+- Highlight creation from selected EPUB text.
+- Notes attached to highlights from the annotations sheet.
 - Per-book annotations sheet.
-- Export stored highlights to Markdown or PDF.
-
-Important annotation limitation: text selection does not yet create highlights/notes from the reader UI.
+- Export stored highlights to Markdown, PDF, or JSON.
 
 ### Data and Backup
 
@@ -76,10 +76,12 @@ Important annotation limitation: text selection does not yet create highlights/n
 ### Accessibility and Themes
 
 - Material 3 theme foundation with eight built-in visual themes.
-- Settings toggles for reduced motion, high contrast, dyslexia-friendly mode, and low stimulation mode.
+- Reduced motion removes route animations.
+- High contrast and low stimulation modes alter app colours.
+- Dyslexia-friendly mode swaps reader typography to the configured dyslexia font family.
 - Some semantic labels and tooltips on key library/settings controls.
 
-Important accessibility limitation: high contrast, low stimulation, TalkBack flow, large text behavior, and reduced motion need a dedicated release pass.
+Important accessibility limitation: TalkBack flow, large text behavior, focus order, and full contrast QA still need a dedicated release pass.
 
 ## Current Verification Baseline
 
@@ -105,6 +107,13 @@ Near-term priorities:
 
 1. Release foundations: signing, icons, truthful docs, error handling, backup safety.
 2. Design system: spacing, typography, polished empty/loading/error states.
-3. Reader excellence: EPUB pagination, working highlights/notes, better resume, search.
+3. Reader excellence: full EPUB CSS/layout fidelity, richer notes, better resume, search.
 4. Accessibility: TalkBack, large text, reduced motion, high contrast, low stimulation.
 5. Library organization: collections, tags UI, metadata editing, duplicate handling.
+
+Release preparation docs:
+
+- `docs/release-signing.md`
+- `docs/privacy-policy.md`
+- `docs/manual-qa-checklist.md`
+- `docs/play-store-readiness.md`

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
@@ -276,34 +278,64 @@ final readerSettingsProvider =
     });
 
 class ReaderSettingsNotifier extends StateNotifier<ReaderSettings> {
-  ReaderSettingsNotifier() : super(const ReaderSettings());
+  ReaderSettingsNotifier() : super(const ReaderSettings()) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(AppConstants.prefKeyReaderDefaults);
+    if (raw == null || raw.isEmpty) return;
+
+    try {
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      state = ReaderSettings.fromJson(json);
+    } catch (_) {
+      await prefs.remove(AppConstants.prefKeyReaderDefaults);
+    }
+  }
+
+  Future<void> _save() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      AppConstants.prefKeyReaderDefaults,
+      jsonEncode(state.toJson()),
+    );
+  }
 
   void update(ReaderSettings settings) {
     state = settings;
+    _save();
   }
 
   void setFontFamily(String fontFamily) {
     state = state.copyWith(fontFamily: fontFamily);
+    _save();
   }
 
   void setFontSize(double fontSize) {
     state = state.copyWith(fontSize: fontSize);
+    _save();
   }
 
   void setLineHeight(double lineHeight) {
     state = state.copyWith(lineHeight: lineHeight);
+    _save();
   }
 
   void setMargin(double margin) {
     state = state.copyWith(horizontalMargin: margin);
+    _save();
   }
 
   void setAlignment(TextAlignment alignment) {
     state = state.copyWith(textAlignment: alignment);
+    _save();
   }
 
   void toggleHyphenation() {
     state = state.copyWith(hyphenationEnabled: !state.hyphenationEnabled);
+    _save();
   }
 }
 

@@ -13,9 +13,9 @@ Status key:
 | Android app bundle builds | Completed | Low | Keep `flutter build appbundle --release` as a release gate. |
 | Static analysis | Completed | Low | Keep `flutter analyze` clean before every release. |
 | Unit/widget tests | Completed | Medium | Current tests are useful but shallow; expand before public release. |
-| Release signing | Needs work | High | Replace debug signing with real release signing or Play App Signing flow. |
+| Release signing | Needs work | High | Gradle supports `android/key.properties`; create a real upload keystore before Play upload. |
 | Versioning | Needs work | Medium | Confirm `pubspec.yaml` `version` and Android `versionCode` before every upload. |
-| App size | Risk | Medium | Current bundle is about 61.8 MB; monitor after fonts/assets/features are added. |
+| App size | Risk | Medium | Current bundle is about 59 MB; monitor after assets/features are added. |
 | R8/ProGuard | Risk | Low | Validate release behavior after signing and dependency upgrades. |
 
 ## Android Store Assets
@@ -38,7 +38,7 @@ Status key:
 | Offline-first behavior | Completed | Medium | Reader/library work locally; keep network-free core flows. |
 | Ads/tracking | Completed | Low | No ad or analytics SDKs are present. |
 | Broad storage permissions | Completed | Low | File picker avoids broad storage permissions. |
-| Privacy policy | Needs work | High | Publish a policy explaining local files, no accounts, no tracking, backups. |
+| Privacy policy | Needs work | High | Draft exists in `docs/privacy-policy.md`; host it at a public HTTPS URL before submission. |
 | Data Safety form | Needs work | High | Fill based on local-only data handling and no collection/sharing. |
 
 ## Product Quality Gates
@@ -49,9 +49,9 @@ Status key:
 | Duplicate import handling | Completed | Medium | Likely duplicates are rejected by title, format, and file size. |
 | Backup validation | Completed | Medium | Restore rejects duplicate IDs and orphaned annotations. |
 | Metadata-only restore warning | Completed | Medium | Restore reports missing book files after metadata import. |
-| EPUB reader quality | Needs work | High | Build proper reflow pagination and highlight creation before premium launch. |
+| EPUB reader quality | Needs work | High | Highlight creation, TOC jumps, and viewport-measured Flutter text pagination exist; full EPUB CSS/layout fidelity still needs deeper engine work. |
 | PDF reader quality | Risk | Medium | Validate large PDFs, memory use, text selection, and resume behavior. |
-| Accessibility | Needs work | High | Run full TalkBack, large text, contrast, focus order, and reduced motion pass. |
+| Accessibility | Needs work | High | Reader controls have stronger semantics; run full TalkBack, large text, contrast, focus order, and reduced motion pass on device. |
 | Crash resilience | Needs work | High | Add tests for corrupt files, missing files, restore failures, and large libraries. |
 
 ## Internal Testing Checklist
@@ -65,6 +65,7 @@ Status key:
 - Open EPUB, change reader settings, close, reopen.
 - Open PDF, navigate pages, close, reopen.
 - Add bookmark and verify it appears in annotations.
+- Select EPUB text, create a highlight, add a note, and export highlights.
 - Export backup.
 - Import backup on the same device.
 - Import backup after deleting/moving book files and verify metadata-only warning.
@@ -72,3 +73,4 @@ Status key:
 - Test system font scaling at large sizes.
 - Test dark mode and high contrast settings.
 - Build signed release candidate and install it on a physical Android device.
+- Fill out `docs/manual-qa-checklist.md` for each release candidate device.

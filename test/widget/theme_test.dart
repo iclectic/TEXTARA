@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textara/core/theme/leaf_theme.dart';
 import 'package:textara/domain/entities/app_theme.dart';
 
 void main() {
@@ -29,20 +30,22 @@ void main() {
       expect(BuiltInThemes.findById('nonexistent').id, 'porcelain');
     });
 
-    test('theme names are: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Ember',
-        () {
-      final names = BuiltInThemes.all.map((t) => t.name).toList();
-      expect(names, [
-        'Porcelain',
-        'Parchment',
-        'Dusk',
-        'Midnight',
-        'Sage',
-        'Rosewood',
-        'Ocean',
-        'Ember',
-      ]);
-    });
+    test(
+      'theme names are: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Ember',
+      () {
+        final names = BuiltInThemes.all.map((t) => t.name).toList();
+        expect(names, [
+          'Porcelain',
+          'Parchment',
+          'Dusk',
+          'Midnight',
+          'Sage',
+          'Rosewood',
+          'Ocean',
+          'Ember',
+        ]);
+      },
+    );
 
     test('porcelain is a light theme', () {
       expect(BuiltInThemes.porcelain.brightness, Brightness.light);
@@ -75,19 +78,26 @@ void main() {
       for (final theme in BuiltInThemes.all) {
         final luminance = theme.backgroundColor.computeLuminance();
         if (theme.brightness == Brightness.dark) {
-          expect(luminance, lessThan(0.5),
-              reason: '${theme.name} should have dark background');
+          expect(
+            luminance,
+            lessThan(0.5),
+            reason: '${theme.name} should have dark background',
+          );
         } else {
-          expect(luminance, greaterThanOrEqualTo(0.3),
-              reason: '${theme.name} should have light background');
+          expect(
+            luminance,
+            greaterThanOrEqualTo(0.3),
+            reason: '${theme.name} should have light background',
+          );
         }
       }
     });
   });
 
   group('Theme switching in widget tree', () {
-    testWidgets('switching AppTheme updates scaffold background',
-        (WidgetTester tester) async {
+    testWidgets('switching AppTheme updates scaffold background', (
+      WidgetTester tester,
+    ) async {
       AppTheme currentTheme = BuiltInThemes.porcelain;
 
       await tester.pumpWidget(
@@ -137,8 +147,45 @@ void main() {
 
       final scaffoldContext = tester.element(find.byType(Scaffold));
       final resolvedTheme = Theme.of(scaffoldContext);
-      expect(resolvedTheme.scaffoldBackgroundColor,
-          BuiltInThemes.dusk.backgroundColor);
+      expect(
+        resolvedTheme.scaffoldBackgroundColor,
+        BuiltInThemes.dusk.backgroundColor,
+      );
+    });
+  });
+
+  group('LeafTheme accessibility modes', () {
+    test('high contrast uses black text on white for light themes', () {
+      final theme = LeafTheme.fromAppTheme(
+        BuiltInThemes.porcelain,
+        highContrast: true,
+      );
+
+      expect(theme.scaffoldBackgroundColor, Colors.white);
+      expect(theme.colorScheme.onSurface, Colors.black);
+      expect(theme.colorScheme.primary, const Color(0xFF003EA8));
+    });
+
+    test('low stimulation mutes the accent colour', () {
+      final theme = LeafTheme.fromAppTheme(
+        BuiltInThemes.porcelain,
+        lowStimulation: true,
+      );
+
+      expect(theme.colorScheme.primary, const Color(0xFF5F6F65));
+      expect(theme.scaffoldBackgroundColor, const Color(0xFFF7F7F2));
+    });
+
+    test('reduced motion replaces Android page transitions', () {
+      final theme = LeafTheme.fromAppTheme(
+        BuiltInThemes.porcelain,
+        reducedMotion: true,
+      );
+
+      expect(
+        theme.pageTransitionsTheme.builders[TargetPlatform.android],
+        isA<TextaraNoAnimationPageTransitionsBuilder>(),
+      );
     });
   });
 }

@@ -64,21 +64,26 @@ class _TextaraAppState extends ConsumerState<TextaraApp> {
   Widget build(BuildContext context) {
     final appTheme = ref.watch(currentThemeProvider);
     final reducedMotion = ref.watch(reducedMotionProvider);
+    final highContrast = ref.watch(highContrastProvider);
+    final lowStimulation = ref.watch(lowStimulationProvider);
 
     if (_isLoading) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: LeafTheme.fromAppTheme(BuiltInThemes.porcelain),
-        home: const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
 
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: LeafTheme.fromAppTheme(appTheme, reducedMotion: reducedMotion),
+      theme: LeafTheme.fromAppTheme(
+        appTheme,
+        reducedMotion: reducedMotion,
+        highContrast: highContrast,
+        lowStimulation: lowStimulation,
+      ),
       home: _isFirstRun ? const OnboardingScreen() : const LibraryScreen(),
     );
   }

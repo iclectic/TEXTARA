@@ -96,73 +96,76 @@ class Book extends Equatable {
     );
   }
 
-  String get formattedProgress => '${(readingProgress * 100).toStringAsFixed(0)}%';
+  String get formattedProgress {
+    final clamped = readingProgress.clamp(0.0, 1.0);
+    return '${(clamped * 100).toStringAsFixed(0)}%';
+  }
 
   bool get isEpub => format == BookFormat.epub;
   bool get isPdf => format == BookFormat.pdf;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'author': author,
-        'description': description,
-        'filePath': filePath,
-        'format': format.name,
-        'coverPath': coverPath,
-        'readingStatus': readingStatus.name,
-        'readingProgress': readingProgress,
-        'currentPage': currentPage,
-        'currentChapterId': currentChapterId,
-        'totalPages': totalPages,
-        'dateAdded': dateAdded.toIso8601String(),
-        'lastOpenedAt': lastOpenedAt?.toIso8601String(),
-        'isFavourite': isFavourite,
-        'tags': tags,
-        'collectionIds': collectionIds,
-        'fileSizeBytes': fileSizeBytes,
-        'language': language,
-        'publisher': publisher,
-        'isbn': isbn,
-      };
+    'id': id,
+    'title': title,
+    'author': author,
+    'description': description,
+    'filePath': filePath,
+    'format': format.name,
+    'coverPath': coverPath,
+    'readingStatus': readingStatus.name,
+    'readingProgress': readingProgress,
+    'currentPage': currentPage,
+    'currentChapterId': currentChapterId,
+    'totalPages': totalPages,
+    'dateAdded': dateAdded.toIso8601String(),
+    'lastOpenedAt': lastOpenedAt?.toIso8601String(),
+    'isFavourite': isFavourite,
+    'tags': tags,
+    'collectionIds': collectionIds,
+    'fileSizeBytes': fileSizeBytes,
+    'language': language,
+    'publisher': publisher,
+    'isbn': isbn,
+  };
 
   factory Book.fromJson(Map<String, dynamic> json) => Book(
-        id: json['id'] as String,
-        title: json['title'] as String? ?? 'Untitled',
-        author: json['author'] as String? ?? 'Unknown Author',
-        description: json['description'] as String?,
-        filePath: json['filePath'] as String,
-        format: BookFormat.values.firstWhere(
-          (e) => e.name == json['format'],
-          orElse: () => BookFormat.epub,
-        ),
-        coverPath: json['coverPath'] as String?,
-        readingStatus: ReadingStatus.values.firstWhere(
-          (e) => e.name == json['readingStatus'],
-          orElse: () => ReadingStatus.notStarted,
-        ),
-        readingProgress: (json['readingProgress'] as num?)?.toDouble() ?? 0.0,
-        currentPage: json['currentPage'] as int? ?? 0,
-        currentChapterId: json['currentChapterId'] as String?,
-        totalPages: json['totalPages'] as int? ?? 0,
-        dateAdded: DateTime.tryParse(json['dateAdded'] as String? ?? '') ??
-            DateTime.now(),
-        lastOpenedAt: json['lastOpenedAt'] != null
-            ? DateTime.tryParse(json['lastOpenedAt'] as String)
-            : null,
-        isFavourite: json['isFavourite'] as bool? ?? false,
-        tags: (json['tags'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        collectionIds: (json['collectionIds'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        fileSizeBytes: json['fileSizeBytes'] as int? ?? 0,
-        language: json['language'] as String?,
-        publisher: json['publisher'] as String?,
-        isbn: json['isbn'] as String?,
-      );
+    id: json['id'] as String,
+    title: json['title'] as String? ?? 'Untitled',
+    author: json['author'] as String? ?? 'Unknown Author',
+    description: json['description'] as String?,
+    filePath: json['filePath'] as String,
+    format: BookFormat.values.firstWhere(
+      (e) => e.name == json['format'],
+      orElse: () => BookFormat.epub,
+    ),
+    coverPath: json['coverPath'] as String?,
+    readingStatus: ReadingStatus.values.firstWhere(
+      (e) => e.name == json['readingStatus'],
+      orElse: () => ReadingStatus.notStarted,
+    ),
+    readingProgress: (json['readingProgress'] as num?)?.toDouble() ?? 0.0,
+    currentPage: json['currentPage'] as int? ?? 0,
+    currentChapterId: json['currentChapterId'] as String?,
+    totalPages: json['totalPages'] as int? ?? 0,
+    dateAdded:
+        DateTime.tryParse(json['dateAdded'] as String? ?? '') ?? DateTime.now(),
+    lastOpenedAt: json['lastOpenedAt'] != null
+        ? DateTime.tryParse(json['lastOpenedAt'] as String)
+        : null,
+    isFavourite: json['isFavourite'] as bool? ?? false,
+    tags:
+        (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+        [],
+    collectionIds:
+        (json['collectionIds'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ??
+        [],
+    fileSizeBytes: json['fileSizeBytes'] as int? ?? 0,
+    language: json['language'] as String?,
+    publisher: json['publisher'] as String?,
+    isbn: json['isbn'] as String?,
+  );
 
   @override
   List<Object?> get props => [id];

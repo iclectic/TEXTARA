@@ -25,7 +25,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   bool _showControls = true;
   int _currentPage = 0;
   int _totalPages = 1;
+  String? _currentChapterId;
   String _currentChapterTitle = '';
+  String? _requestedChapterId;
   double _progress = 0.0;
 
   @override
@@ -41,20 +43,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     setState(() => _showControls = !_showControls);
   }
 
-  void _onPageChanged(int page, int total, String chapterTitle) {
+  void _onPageChanged(
+    int page,
+    int total,
+    String chapterTitle, {
+    String? chapterId,
+  }) {
     setState(() {
       _currentPage = page;
       _totalPages = total > 0 ? total : 1;
+      _currentChapterId = chapterId;
       _currentChapterTitle = chapterTitle;
       _progress = total > 0 ? page / total : 0.0;
     });
 
-    ref.read(bookDaoProvider).updateReadingProgress(
-          widget.book.id,
-          _progress,
-          page,
-          chapterTitle,
-        );
+    ref
+        .read(bookDaoProvider)
+        .updateReadingProgress(widget.book.id, _progress, page, chapterId);
   }
 
   void _showSettings() {
@@ -66,9 +71,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         maxChildSize: 0.85,
         minChildSize: 0.3,
         expand: false,
-        builder: (_, controller) => ReaderSettingsSheet(
-          scrollController: controller,
-        ),
+        builder: (_, controller) =>
+            ReaderSettingsSheet(scrollController: controller),
       ),
     );
   }
@@ -105,7 +109,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           scrollController: controller,
           onChapterSelected: (chapterId) {
             Navigator.pop(context);
-            // Chapter navigation handled by child view
+            setState(() => _requestedChapterId = chapterId);
           },
         ),
       ),
@@ -119,7 +123,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       bookId: widget.book.id,
       pageNumber: _currentPage,
-      chapterId: _currentChapterTitle,
+      chapterId: _currentChapterId,
       title: '$_currentChapterTitle - Page $_currentPage',
       createdAt: DateTime.now(),
     );
@@ -149,6 +153,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             widget.book.isEpub
                 ? EpubReaderView(
                     book: widget.book,
+                    requestedChapterId: _requestedChapterId,
                     onPageChanged: _onPageChanged,
                   )
                 : PdfReaderView(
