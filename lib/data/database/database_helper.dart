@@ -20,8 +20,9 @@ class DatabaseHelper {
     final path = p.join(dir.path, 'textara.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -114,20 +115,52 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('CREATE INDEX idx_books_title ON books(title)');
+    await db.execute('CREATE INDEX idx_books_author ON books(author)');
+    await db.execute('CREATE INDEX idx_books_status ON books(reading_status)');
+    await db.execute('CREATE INDEX idx_books_favourite ON books(is_favourite)');
+    await db.execute('CREATE INDEX idx_highlights_book ON highlights(book_id)');
+    await db.execute('CREATE INDEX idx_bookmarks_book ON bookmarks(book_id)');
+    await db.execute('CREATE INDEX idx_fts_book ON full_text_search(book_id)');
+    await _createIdeaThreadTables(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createIdeaThreadTables(db);
+    }
+  }
+
+  Future<void> _createIdeaThreadTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE idea_threads (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        tags TEXT NOT NULL DEFAULT '',
+        synthesis_note TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE thread_highlights (
+        thread_id TEXT NOT NULL,
+        highlight_id TEXT NOT NULL,
+        reflection TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        added_at TEXT NOT NULL,
+        PRIMARY KEY (thread_id, highlight_id),
+        FOREIGN KEY (thread_id) REFERENCES idea_threads(id) ON DELETE CASCADE,
+        FOREIGN KEY (highlight_id) REFERENCES highlights(id) ON DELETE CASCADE
+      )
+    ''');
     await db.execute(
-        'CREATE INDEX idx_books_title ON books(title)');
+      'CREATE INDEX idx_thread_highlights_thread ON thread_highlights(thread_id)',
+    );
     await db.execute(
-        'CREATE INDEX idx_books_author ON books(author)');
-    await db.execute(
-        'CREATE INDEX idx_books_status ON books(reading_status)');
-    await db.execute(
-        'CREATE INDEX idx_books_favourite ON books(is_favourite)');
-    await db.execute(
-        'CREATE INDEX idx_highlights_book ON highlights(book_id)');
-    await db.execute(
-        'CREATE INDEX idx_bookmarks_book ON bookmarks(book_id)');
-    await db.execute(
-        'CREATE INDEX idx_fts_book ON full_text_search(book_id)');
+      'CREATE INDEX idx_thread_highlights_highlight ON thread_highlights(highlight_id)',
+    );
   }
 
   Future<void> close() async {

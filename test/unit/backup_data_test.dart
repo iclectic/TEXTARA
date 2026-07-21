@@ -4,6 +4,7 @@ import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/collection.dart';
 import 'package:textara/domain/entities/backup_data.dart';
+import 'package:textara/domain/entities/idea_thread.dart';
 
 void main() {
   group('BackupData', () {
@@ -12,6 +13,8 @@ void main() {
     late Highlight sampleHighlight;
     late Bookmark sampleBookmark;
     late Collection sampleCollection;
+    late IdeaThread sampleThread;
+    late ThreadHighlightLink sampleThreadHighlightLink;
 
     setUp(() {
       sampleBook = Book(
@@ -50,6 +53,19 @@ void main() {
         updatedAt: DateTime(2025, 1, 1),
       );
 
+      sampleThread = IdeaThread(
+        id: 'thread-1',
+        title: 'Research question',
+        createdAt: DateTime(2025, 2, 20),
+        updatedAt: DateTime(2025, 2, 20),
+      );
+      sampleThreadHighlightLink = ThreadHighlightLink(
+        threadId: 'thread-1',
+        highlightId: 'h-1',
+        sortOrder: 0,
+        addedAt: DateTime(2025, 2, 20),
+      );
+
       backup = BackupData(
         version: '1.0.0',
         exportedAt: DateTime(2025, 3, 1),
@@ -57,6 +73,8 @@ void main() {
         highlights: [sampleHighlight],
         bookmarks: [sampleBookmark],
         collections: [sampleCollection],
+        ideaThreads: [sampleThread],
+        threadHighlightLinks: [sampleThreadHighlightLink],
       );
     });
 
@@ -100,6 +118,8 @@ void main() {
       expect((json['bookmarks'] as List).length, 1);
       expect(json['collections'], isList);
       expect((json['collections'] as List).length, 1);
+      expect((json['ideaThreads'] as List).length, 1);
+      expect((json['threadHighlightLinks'] as List).length, 1);
     });
 
     test('fromJson round-trips correctly', () {
@@ -115,6 +135,8 @@ void main() {
       expect(restored.bookmarks.first.pageNumber, 10);
       expect(restored.collections.length, 1);
       expect(restored.collections.first.name, 'Favourites');
+      expect(restored.ideaThreads.single.title, 'Research question');
+      expect(restored.threadHighlightLinks.single.highlightId, 'h-1');
     });
 
     test('fromJson handles empty JSON gracefully', () {
@@ -124,6 +146,8 @@ void main() {
       expect(restored.highlights, isEmpty);
       expect(restored.bookmarks, isEmpty);
       expect(restored.collections, isEmpty);
+      expect(restored.ideaThreads, isEmpty);
+      expect(restored.threadHighlightLinks, isEmpty);
     });
 
     test('fromJson handles missing fields gracefully', () {
@@ -141,10 +165,7 @@ void main() {
         'version': '1.0.0',
         'exportedAt': '2025-03-01T00:00:00.000',
         'books': [
-          {
-            'id': 'partial-book',
-            'filePath': '/test.epub',
-          }
+          {'id': 'partial-book', 'filePath': '/test.epub'},
         ],
         'highlights': [],
         'bookmarks': [],

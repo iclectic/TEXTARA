@@ -7,10 +7,12 @@ import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/collection.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
+import 'package:textara/domain/entities/idea_thread.dart';
 import 'package:textara/data/database/database_helper.dart';
 import 'package:textara/data/database/book_dao.dart';
 import 'package:textara/data/database/annotation_dao.dart';
 import 'package:textara/data/database/collection_dao.dart';
+import 'package:textara/data/database/idea_thread_dao.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
 import 'package:textara/data/services/import_service.dart';
@@ -31,6 +33,10 @@ final annotationDaoProvider = Provider<AnnotationDao>((ref) {
 
 final collectionDaoProvider = Provider<CollectionDao>((ref) {
   return CollectionDao(ref.watch(databaseHelperProvider));
+});
+
+final ideaThreadDaoProvider = Provider<IdeaThreadDao>((ref) {
+  return IdeaThreadDao(ref.watch(databaseHelperProvider));
 });
 
 // Services
@@ -55,13 +61,15 @@ final exportServiceProvider = Provider<ExportService>((ref) {
     ref.watch(bookDaoProvider),
     ref.watch(annotationDaoProvider),
     ref.watch(collectionDaoProvider),
+    ref.watch(ideaThreadDaoProvider),
     ref.watch(fileStorageProvider),
   );
 });
 
 // App preferences
-final sharedPreferencesProvider =
-    FutureProvider<SharedPreferences>((ref) async {
+final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
+  ref,
+) async {
   return SharedPreferences.getInstance();
 });
 
@@ -71,8 +79,9 @@ final isFirstRunProvider = FutureProvider<bool>((ref) async {
 });
 
 // Theme state
-final currentThemeProvider =
-    StateNotifierProvider<ThemeNotifier, AppTheme>((ref) {
+final currentThemeProvider = StateNotifierProvider<ThemeNotifier, AppTheme>((
+  ref,
+) {
   return ThemeNotifier();
 });
 
@@ -91,32 +100,35 @@ class ThemeNotifier extends StateNotifier<AppTheme> {
 
   Future<void> loadSavedTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeId =
-        prefs.getString(AppConstants.prefKeyTheme) ?? 'porcelain';
+    final themeId = prefs.getString(AppConstants.prefKeyTheme) ?? 'porcelain';
     state = BuiltInThemes.findById(themeId);
   }
 }
 
 // Accessibility settings
-final reducedMotionProvider =
-    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
+final reducedMotionProvider = StateNotifierProvider<BoolSettingNotifier, bool>((
+  ref,
+) {
   return BoolSettingNotifier(AppConstants.prefKeyReducedMotion);
 });
 
-final highContrastProvider =
-    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
+final highContrastProvider = StateNotifierProvider<BoolSettingNotifier, bool>((
+  ref,
+) {
   return BoolSettingNotifier(AppConstants.prefKeyHighContrast);
 });
 
-final dyslexiaModeProvider =
-    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
+final dyslexiaModeProvider = StateNotifierProvider<BoolSettingNotifier, bool>((
+  ref,
+) {
   return BoolSettingNotifier(AppConstants.prefKeyDyslexiaMode);
 });
 
-final lowStimulationProvider =
-    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
-  return BoolSettingNotifier(AppConstants.prefKeyLowStimulation);
-});
+final lowStimulationProvider = StateNotifierProvider<BoolSettingNotifier, bool>(
+  (ref) {
+    return BoolSettingNotifier(AppConstants.prefKeyLowStimulation);
+  },
+);
 
 class BoolSettingNotifier extends StateNotifier<bool> {
   final String _prefKey;
@@ -146,8 +158,8 @@ class BoolSettingNotifier extends StateNotifier<bool> {
 // Library state
 final libraryViewModeProvider =
     StateNotifierProvider<LibraryViewModeNotifier, LibraryViewMode>((ref) {
-  return LibraryViewModeNotifier();
-});
+      return LibraryViewModeNotifier();
+    });
 
 class LibraryViewModeNotifier extends StateNotifier<LibraryViewMode> {
   LibraryViewModeNotifier() : super(LibraryViewMode.grid) {
@@ -169,19 +181,21 @@ class LibraryViewModeNotifier extends StateNotifier<LibraryViewMode> {
   }
 }
 
-final librarySortProvider =
-    StateProvider<LibrarySortField>((ref) => LibrarySortField.lastAdded);
+final librarySortProvider = StateProvider<LibrarySortField>(
+  (ref) => LibrarySortField.lastAdded,
+);
 
-final librarySortOrderProvider =
-    StateProvider<SortOrder>((ref) => SortOrder.descending);
+final librarySortOrderProvider = StateProvider<SortOrder>(
+  (ref) => SortOrder.descending,
+);
 
 final librarySearchQueryProvider = StateProvider<String>((ref) => '');
 
 // Books state
 final booksProvider =
     StateNotifierProvider<BooksNotifier, AsyncValue<List<Book>>>((ref) {
-  return BooksNotifier(ref.watch(bookDaoProvider));
-});
+      return BooksNotifier(ref.watch(bookDaoProvider));
+    });
 
 class BooksNotifier extends StateNotifier<AsyncValue<List<Book>>> {
   final BookDao _bookDao;
@@ -258,15 +272,15 @@ final filteredBooksProvider = Provider<List<Book>>((ref) {
       return filtered;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (error, stackTrace) => [],
   );
 });
 
 // Reader settings
 final readerSettingsProvider =
     StateNotifierProvider<ReaderSettingsNotifier, ReaderSettings>((ref) {
-  return ReaderSettingsNotifier();
-});
+      return ReaderSettingsNotifier();
+    });
 
 class ReaderSettingsNotifier extends StateNotifier<ReaderSettings> {
   ReaderSettingsNotifier() : super(const ReaderSettings());
@@ -301,30 +315,42 @@ class ReaderSettingsNotifier extends StateNotifier<ReaderSettings> {
 }
 
 // Annotations for a specific book
-final bookHighlightsProvider =
-    FutureProvider.family<List<Highlight>, String>((ref, bookId) async {
+final bookHighlightsProvider = FutureProvider.family<List<Highlight>, String>((
+  ref,
+  bookId,
+) async {
   final dao = ref.watch(annotationDaoProvider);
   return dao.getHighlightsForBook(bookId);
 });
 
-final bookBookmarksProvider =
-    FutureProvider.family<List<Bookmark>, String>((ref, bookId) async {
+final bookBookmarksProvider = FutureProvider.family<List<Bookmark>, String>((
+  ref,
+  bookId,
+) async {
   final dao = ref.watch(annotationDaoProvider);
   return dao.getBookmarksForBook(bookId);
 });
 
 // Collections
-final collectionsProvider =
-    FutureProvider<List<Collection>>((ref) async {
+final collectionsProvider = FutureProvider<List<Collection>>((ref) async {
   final dao = ref.watch(collectionDaoProvider);
   return dao.getAllCollections();
 });
 
+final ideaThreadsProvider = FutureProvider<List<IdeaThread>>((ref) async {
+  return ref.watch(ideaThreadDaoProvider).getAllThreads();
+});
+
+final threadEvidenceProvider =
+    FutureProvider.family<List<ThreadEvidence>, String>((ref, threadId) async {
+      return ref.watch(ideaThreadDaoProvider).getEvidenceForThread(threadId);
+    });
+
 // Import state
 final importProgressProvider =
     StateNotifierProvider<ImportProgressNotifier, ImportProgress>((ref) {
-  return ImportProgressNotifier();
-});
+      return ImportProgressNotifier();
+    });
 
 class ImportProgress {
   final bool isImporting;
