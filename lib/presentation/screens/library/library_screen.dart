@@ -10,6 +10,7 @@ import 'package:textara/presentation/widgets/library/library_empty_state.dart';
 import 'package:textara/presentation/widgets/library/sort_bottom_sheet.dart';
 import 'package:textara/presentation/screens/reader/reader_screen.dart';
 import 'package:textara/presentation/screens/settings/settings_screen.dart';
+import 'package:textara/presentation/screens/threads/idea_threads_screen.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -49,20 +50,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         message =
             '$successCount imported, $failCount failed. Check file format and try again.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
   void _openBook(Book book) {
     HapticFeedback.lightImpact();
     ref.read(bookDaoProvider).updateLastOpened(book.id);
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ReaderScreen(book: book),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ReaderScreen(book: book)));
   }
 
   void _toggleSearch() {
@@ -94,9 +93,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching
-            ? _buildSearchField(theme)
-            : const Text('Library'),
+        title: _isSearching ? _buildSearchField(theme) : const Text('Library'),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search_rounded),
@@ -123,11 +120,20 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             tooltip: 'Sort books',
           ),
           IconButton(
-            icon: const Icon(Icons.settings_rounded),
+            icon: const Icon(Icons.account_tree_outlined),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                MaterialPageRoute(builder: (_) => const IdeaThreadsScreen()),
               );
+            },
+            tooltip: 'Idea Threads',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
             },
             tooltip: 'Settings',
           ),
@@ -136,8 +142,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : books.isEmpty
-              ? LibraryEmptyState(onImport: _importBooks)
-              : _buildBooksList(books, viewMode, isTablet),
+          ? LibraryEmptyState(onImport: _importBooks)
+          : _buildBooksList(books, viewMode, isTablet),
       floatingActionButton: books.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: _importBooks,
@@ -172,12 +178,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   Widget _buildBooksList(
-      List<Book> books, LibraryViewMode viewMode, bool isTablet) {
+    List<Book> books,
+    LibraryViewMode viewMode,
+    bool isTablet,
+  ) {
     if (viewMode == LibraryViewMode.list) {
       return ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: books.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 4),
+        separatorBuilder: (context, index) => const SizedBox(height: 4),
         itemBuilder: (context, index) {
           return BookListTile(
             book: books[index],
