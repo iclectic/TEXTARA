@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/reader_settings.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 
 class EpubReaderView extends ConsumerStatefulWidget {
@@ -55,11 +57,13 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
         final text = document.body?.text ?? '';
         if (text.trim().isEmpty) continue;
 
-        loaded.add(_ChapterContent(
-          title: chapter.title ?? 'Chapter ${i + 1}',
-          text: text.trim(),
-          htmlContent: html,
-        ));
+        loaded.add(
+          _ChapterContent(
+            title: chapter.title ?? 'Chapter ${i + 1}',
+            text: text.trim(),
+            htmlContent: html,
+          ),
+        );
       }
 
       if (!mounted) return;
@@ -80,17 +84,17 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _error = 'Could not open this EPUB file. It may be damaged or in an unsupported format.';
+        _error =
+            'Could not open this EPUB file. It may be damaged or in an unsupported format.';
       });
     }
   }
 
   void _reportProgress() {
     if (_chapters.isEmpty) return;
-    final title =
-        _currentChapterIndex < _chapters.length
-            ? _chapters[_currentChapterIndex].title
-            : '';
+    final title = _currentChapterIndex < _chapters.length
+        ? _chapters[_currentChapterIndex].title
+        : '';
     widget.onPageChanged(_currentChapterIndex, _chapters.length, title);
   }
 
@@ -131,6 +135,45 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
         return TextAlign.center;
       case TextAlignment.justify:
         return TextAlign.justify;
+    }
+  }
+
+  Future<void> _createHighlight({
+    required String selectedText,
+    required String chapterTitle,
+    required int startOffset,
+    required int endOffset,
+  }) async {
+    final trimmedText = selectedText.trim();
+    if (trimmedText.isEmpty) return;
+
+    final now = DateTime.now();
+    final highlight = Highlight(
+      id: now.microsecondsSinceEpoch.toString(),
+      bookId: widget.book.id,
+      chapterId: chapterTitle,
+      selectedText: trimmedText,
+      startOffset: startOffset,
+      endOffset: endOffset,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    try {
+      await ref.read(annotationDaoProvider).insertHighlight(highlight);
+      ref.invalidate(bookHighlightsProvider(widget.book.id));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Highlight saved'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not save highlight')));
     }
   }
 
@@ -206,13 +249,19 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
   }
 
   Widget _buildChapterView(
-      _ChapterContent chapter, ThemeData theme, dynamic settings) {
+    _ChapterContent chapter,
+    ThemeData theme,
+    ReaderSettings settings,
+  ) {
     final textStyle = _getReaderTextStyle();
     final textAlign = _getTextAlign();
     final margin = ref.watch(readerSettingsProvider).horizontalMargin;
     final paragraphSpacing = ref.watch(readerSettingsProvider).paragraphSpacing;
 
-    final paragraphs = chapter.text.split('\n').where((p) => p.trim().isNotEmpty).toList();
+    final paragraphs = chapter.text
+        .split('\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
 
     return ListView.builder(
       padding: EdgeInsets.fromLTRB(
@@ -238,10 +287,33 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
           padding: EdgeInsets.only(bottom: paragraphSpacing),
           child: SelectableText(
             paragraphs[index - 1],
-            style: textStyle.copyWith(
-              color: theme.colorScheme.onSurface,
-            ),
+            style: textStyle.copyWith(color: theme.colorScheme.onSurface),
             textAlign: textAlign,
+            contextMenuBuilder: (context, editableTextState) {
+              final value = editableTextState.textEditingValue;
+              final selection = value.selection;
+              final selectedText = selection.textInside(value.text);
+              final buttonItems = <ContextMenuButtonItem>[
+                if (selectedText.trim().isNotEmpty)
+                  ContextMenuButtonItem(
+                    label: 'Highlight',
+                    onPressed: () {
+                      editableTextState.hideToolbar();
+                      _createHighlight(
+                        selectedText: selectedText,
+                        chapterTitle: chapter.title,
+                        startOffset: selection.start,
+                        endOffset: selection.end,
+                      );
+                    },
+                  ),
+                ...editableTextState.contextMenuButtonItems,
+              ];
+              return AdaptiveTextSelectionToolbar.buttonItems(
+                anchors: editableTextState.contextMenuAnchors,
+                buttonItems: buttonItems,
+              );
+            },
           ),
         );
       },
