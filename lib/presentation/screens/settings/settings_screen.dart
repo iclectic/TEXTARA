@@ -18,9 +18,7 @@ class SettingsScreen extends ConsumerWidget {
     final lowStimulation = ref.watch(lowStimulationProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -37,8 +35,7 @@ class SettingsScreen extends ConsumerWidget {
           _SectionHeader(title: 'Accessibility'),
           SwitchListTile(
             title: const Text('Reduced motion'),
-            subtitle: const Text(
-                'Disable animations and transitions'),
+            subtitle: const Text('Disable animations and transitions'),
             value: reducedMotion,
             onChanged: (_) {
               HapticFeedback.selectionClick();
@@ -47,8 +44,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SwitchListTile(
             title: const Text('High contrast'),
-            subtitle:
-                const Text('Increase contrast for better readability'),
+            subtitle: const Text('Increase contrast for better readability'),
             value: highContrast,
             onChanged: (_) {
               HapticFeedback.selectionClick();
@@ -58,7 +54,8 @@ class SettingsScreen extends ConsumerWidget {
           SwitchListTile(
             title: const Text('Dyslexia-friendly mode'),
             subtitle: const Text(
-                'Use a dyslexia-friendly font with extra spacing'),
+              'Use a dyslexia-friendly font with extra spacing',
+            ),
             value: dyslexiaMode,
             onChanged: (_) {
               HapticFeedback.selectionClick();
@@ -67,8 +64,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SwitchListTile(
             title: const Text('Low stimulation mode'),
-            subtitle: const Text(
-                'Muted colours and simplified interface'),
+            subtitle: const Text('Muted colours and simplified interface'),
             value: lowStimulation,
             onChanged: (_) {
               HapticFeedback.selectionClick();
@@ -81,15 +77,13 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.upload_rounded),
             title: const Text('Export backup'),
-            subtitle: const Text(
-                'Save library data, highlights, and notes'),
+            subtitle: const Text('Save library data, highlights, and notes'),
             onTap: () => _exportBackup(context, ref),
           ),
           ListTile(
             leading: const Icon(Icons.download_rounded),
             title: const Text('Import backup'),
-            subtitle: const Text(
-                'Restore from a Textara backup file'),
+            subtitle: const Text('Restore from a Textara backup file'),
             onTap: () => _importBackup(context, ref),
           ),
           const Divider(height: 32),
@@ -104,7 +98,8 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.description_outlined),
             title: const Text('DRM-free only'),
             subtitle: const Text(
-                'Textara supports DRM-free EPUB and PDF files. It does not bypass or remove DRM.'),
+              'Textara supports DRM-free EPUB and PDF files. It does not bypass or remove DRM.',
+            ),
           ),
           const SizedBox(height: 32),
         ],
@@ -118,14 +113,13 @@ class SettingsScreen extends ConsumerWidget {
       final exportService = ref.read(exportServiceProvider);
       final path = await exportService.exportBackup();
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Backup saved to: $path')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Backup saved to: $path')));
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Backup failed. Please try again.')),
+        const SnackBar(content: Text('Backup failed. Please try again.')),
       );
     }
   }
@@ -151,22 +145,23 @@ class SettingsScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Restored ${backup.books.length} books, ${backup.highlights.length} highlights.'),
+              'Restored ${backup.books.length} books, ${backup.highlights.length} highlights.',
+            ),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'Could not read this backup file. It may be corrupted or from a different app.'),
+              'Could not read this backup file. It may be corrupted or from a different app.',
+            ),
           ),
         );
       }
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Import failed. Please try again.')),
+        const SnackBar(content: Text('Import failed. Please try again.')),
       );
     }
   }
@@ -197,10 +192,7 @@ class _ThemeSelector extends StatelessWidget {
   final AppTheme currentTheme;
   final ValueChanged<AppTheme> onChanged;
 
-  const _ThemeSelector({
-    required this.currentTheme,
-    required this.onChanged,
-  });
+  const _ThemeSelector({required this.currentTheme, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -212,7 +204,7 @@ class _ThemeSelector extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: BuiltInThemes.all.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final appTheme = BuiltInThemes.all[index];
           final isSelected = appTheme.id == currentTheme.id;

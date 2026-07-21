@@ -6,11 +6,7 @@ class BookGridTile extends StatelessWidget {
   final Book book;
   final VoidCallback onTap;
 
-  const BookGridTile({
-    super.key,
-    required this.book,
-    required this.onTap,
-  });
+  const BookGridTile({super.key, required this.book, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +98,8 @@ class BookGridTile extends StatelessWidget {
       return Image.file(
         file,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholderCover(theme),
+        errorBuilder: (context, error, stackTrace) =>
+            _buildPlaceholderCover(theme),
       );
     }
     return _buildPlaceholderCover(theme);
@@ -126,7 +123,9 @@ class BookGridTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            book.isEpub ? Icons.menu_book_rounded : Icons.picture_as_pdf_rounded,
+            book.isEpub
+                ? Icons.menu_book_rounded
+                : Icons.picture_as_pdf_rounded,
             color: Colors.white.withValues(alpha: 0.8),
             size: 28,
           ),
@@ -166,9 +165,7 @@ class BookGridTile extends StatelessWidget {
       child: FractionallySizedBox(
         alignment: Alignment.centerLeft,
         widthFactor: book.readingProgress.clamp(0.0, 1.0),
-        child: Container(
-          color: theme.colorScheme.primary,
-        ),
+        child: Container(color: theme.colorScheme.primary),
       ),
     );
   }

@@ -107,6 +107,41 @@ void main() {
       expect(invalid.isValid, false);
     });
 
+    test('isValid returns false when a highlight points at a missing book', () {
+      final orphanHighlight = sampleHighlight.copyWith(bookId: 'missing-book');
+      final invalid = BackupData(
+        version: '1.0.0',
+        exportedAt: DateTime.now(),
+        books: [sampleBook],
+        highlights: [orphanHighlight],
+        bookmarks: [],
+        collections: [],
+      );
+      expect(invalid.isValid, false);
+      expect(
+        invalid.validationErrors,
+        contains('Highlight h-1 points at a missing book.'),
+      );
+    });
+
+    test('isValid returns false when a thread link points at missing data', () {
+      final invalid = BackupData(
+        version: '1.0.0',
+        exportedAt: DateTime.now(),
+        books: [sampleBook],
+        highlights: [sampleHighlight],
+        bookmarks: [],
+        collections: [],
+        ideaThreads: [],
+        threadHighlightLinks: [sampleThreadHighlightLink],
+      );
+      expect(invalid.isValid, false);
+      expect(
+        invalid.validationErrors,
+        contains('Thread link points at a missing idea thread.'),
+      );
+    });
+
     test('toJson produces valid JSON map', () {
       final json = backup.toJson();
       expect(json['version'], '1.0.0');

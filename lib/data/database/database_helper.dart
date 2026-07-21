@@ -133,7 +133,7 @@ class DatabaseHelper {
 
   Future<void> _createIdeaThreadTables(Database db) async {
     await db.execute('''
-      CREATE TABLE idea_threads (
+      CREATE TABLE IF NOT EXISTS idea_threads (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT,
@@ -144,7 +144,7 @@ class DatabaseHelper {
       )
     ''');
     await db.execute('''
-      CREATE TABLE thread_highlights (
+      CREATE TABLE IF NOT EXISTS thread_highlights (
         thread_id TEXT NOT NULL,
         highlight_id TEXT NOT NULL,
         reflection TEXT,
@@ -156,10 +156,10 @@ class DatabaseHelper {
       )
     ''');
     await db.execute(
-      'CREATE INDEX idx_thread_highlights_thread ON thread_highlights(thread_id)',
+      'CREATE INDEX IF NOT EXISTS idx_thread_highlights_thread ON thread_highlights(thread_id)',
     );
     await db.execute(
-      'CREATE INDEX idx_thread_highlights_highlight ON thread_highlights(highlight_id)',
+      'CREATE INDEX IF NOT EXISTS idx_thread_highlights_highlight ON thread_highlights(highlight_id)',
     );
   }
 

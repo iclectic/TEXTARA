@@ -9,6 +9,7 @@ import 'package:textara/data/database/idea_thread_dao.dart';
 import 'package:textara/data/database/database_helper.dart';
 import 'package:textara/domain/entities/idea_thread.dart';
 import 'package:textara/data/services/file_storage_service.dart';
+import 'package:textara/data/services/import_security_policy.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -18,14 +19,16 @@ class ExportService {
   final CollectionDao _collectionDao;
   final IdeaThreadDao _ideaThreadDao;
   final FileStorageService _fileStorage;
+  final ImportSecurityPolicy _securityPolicy;
 
   ExportService(
     this._bookDao,
     this._annotationDao,
     this._collectionDao,
     this._ideaThreadDao,
-    this._fileStorage,
-  );
+    this._fileStorage, [
+    ImportSecurityPolicy? securityPolicy,
+  ]) : _securityPolicy = securityPolicy ?? ImportSecurityPolicy();
 
   factory ExportService.create() {
     final dbHelper = DatabaseHelper();
@@ -74,9 +77,10 @@ class ExportService {
 
   Future<BackupData?> importBackup(String filePath) async {
     try {
-      final file = File(filePath);
-      if (!await file.exists()) return null;
+      final validation = await _securityPolicy.validateBackupFile(filePath);
+      if (!validation.isValid) return null;
 
+      final file = File(filePath);
       final jsonString = await file.readAsString();
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       final backup = BackupData.fromJson(json);
@@ -115,7 +119,7 @@ class ExportService {
     final highlights = await _annotationDao.getHighlightsForBook(bookId);
     final buffer = StringBuffer();
     buffer.writeln('# Highlights and Notes');
-    buffer.writeln('## $bookTitle');
+    buffer.writeln('## ${_securityPolicy.sanitizeExportText(bookTitle)}');
     buffer.writeln();
     buffer.writeln('Exported from Textara on ${DateTime.now().toLocal()}');
     buffer.writeln();
@@ -123,10 +127,12 @@ class ExportService {
     for (final h in highlights) {
       buffer.writeln('---');
       buffer.writeln();
-      buffer.writeln('> ${h.selectedText}');
+      buffer.writeln('> ${_securityPolicy.sanitizeExportText(h.selectedText)}');
       buffer.writeln();
       if (h.hasNote) {
-        buffer.writeln('**Note:** ${h.note}');
+        buffer.writeln(
+          '**Note:** ${_securityPolicy.sanitizeExportText(h.note!)}',
+        );
         buffer.writeln();
       }
       buffer.writeln(
@@ -146,18 +152,18 @@ class ExportService {
   Future<String> exportThreadToMarkdown(IdeaThread thread) async {
     final evidence = await _ideaThreadDao.getEvidenceForThread(thread.id);
     final buffer = StringBuffer()
-      ..writeln('# ${thread.title}')
+      ..writeln('# ${_securityPolicy.sanitizeExportText(thread.title)}')
       ..writeln();
     if (thread.description?.trim().isNotEmpty == true) {
       buffer
-        ..writeln(thread.description)
+        ..writeln(_securityPolicy.sanitizeExportText(thread.description!))
         ..writeln();
     }
     if (thread.synthesisNote?.trim().isNotEmpty == true) {
       buffer
         ..writeln('## Synthesis')
         ..writeln()
-        ..writeln(thread.synthesisNote)
+        ..writeln(_securityPolicy.sanitizeExportText(thread.synthesisNote!))
         ..writeln();
     }
     buffer
@@ -165,24 +171,32 @@ class ExportService {
       ..writeln();
     for (final item in evidence) {
       buffer
-        ..writeln('### ${item.bookTitle}')
+        ..writeln('### ${_securityPolicy.sanitizeExportText(item.bookTitle)}')
         ..writeln();
       if (item.highlight.chapterId?.isNotEmpty == true) {
         buffer
-          ..writeln('*${item.highlight.chapterId}*')
+          ..writeln(
+            '*${_securityPolicy.sanitizeExportText(item.highlight.chapterId!)}*',
+          )
           ..writeln();
       }
       buffer
-        ..writeln('> ${item.highlight.selectedText}')
+        ..writeln(
+          '> ${_securityPolicy.sanitizeExportText(item.highlight.selectedText)}',
+        )
         ..writeln();
       if (item.highlight.hasNote) {
         buffer
-          ..writeln('**Reading note:** ${item.highlight.note}')
+          ..writeln(
+            '**Reading note:** ${_securityPolicy.sanitizeExportText(item.highlight.note!)}',
+          )
           ..writeln();
       }
       if (item.hasReflection) {
         buffer
-          ..writeln('**Thread reflection:** ${item.reflection}')
+          ..writeln(
+            '**Thread reflection:** ${_securityPolicy.sanitizeExportText(item.reflection!)}',
+          )
           ..writeln();
       }
     }

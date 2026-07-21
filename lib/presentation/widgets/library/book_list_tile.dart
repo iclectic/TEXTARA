@@ -79,8 +79,9 @@ class BookListTile extends StatelessWidget {
                       Text(
                         book.author,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -90,10 +91,14 @@ class BookListTile extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: _statusColour(book.readingStatus, theme)
-                                  .withValues(alpha: 0.1),
+                              color: _statusColour(
+                                book.readingStatus,
+                                theme,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -101,8 +106,7 @@ class BookListTile extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
-                                color:
-                                    _statusColour(book.readingStatus, theme),
+                                color: _statusColour(book.readingStatus, theme),
                               ),
                             ),
                           ),
@@ -111,18 +115,22 @@ class BookListTile extends StatelessWidget {
                             Text(
                               book.formattedProgress,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                                 fontSize: 11,
                               ),
                             ),
                           const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.05),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.05,
+                              ),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -130,8 +138,9 @@ class BookListTile extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.4),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                             ),
                           ),
@@ -170,7 +179,7 @@ class BookListTile extends StatelessWidget {
       return Image.file(
         file,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholder(theme),
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme),
       );
     }
     return _buildPlaceholder(theme);
@@ -180,9 +189,7 @@ class BookListTile extends StatelessWidget {
     return Container(
       color: theme.colorScheme.primary.withValues(alpha: 0.15),
       child: Icon(
-        book.isEpub
-            ? Icons.menu_book_rounded
-            : Icons.picture_as_pdf_rounded,
+        book.isEpub ? Icons.menu_book_rounded : Icons.picture_as_pdf_rounded,
         size: 20,
         color: theme.colorScheme.primary,
       ),

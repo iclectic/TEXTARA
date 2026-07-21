@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:textara/core/constants/enums.dart';
@@ -7,6 +6,7 @@ import 'package:textara/data/database/book_dao.dart';
 import 'package:textara/data/database/database_helper.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
+import 'package:textara/data/services/import_security_policy.dart';
 
 class ImportResult {
   final bool success;
@@ -20,9 +20,15 @@ class ImportService {
   final BookDao _bookDao;
   final FileStorageService _fileStorage;
   final EpubParserService _epubParser;
+  final ImportSecurityPolicy _securityPolicy;
   final Uuid _uuid = const Uuid();
 
-  ImportService(this._bookDao, this._fileStorage, this._epubParser);
+  ImportService(
+    this._bookDao,
+    this._fileStorage,
+    this._epubParser, [
+    ImportSecurityPolicy? securityPolicy,
+  ]) : _securityPolicy = securityPolicy ?? ImportSecurityPolicy();
 
   factory ImportService.create() {
     final dbHelper = DatabaseHelper();
@@ -55,28 +61,21 @@ class ImportService {
 
   Future<ImportResult> importFile(String filePath) async {
     try {
-      final file = File(filePath);
-      if (!await file.exists()) {
-        return const ImportResult(
+      final validation = await _securityPolicy.validateBookFile(filePath);
+      if (!validation.isValid) {
+        return ImportResult(
           success: false,
-          errorMessage: 'File not found. It may have been moved or deleted.',
-        );
-      }
-
-      final ext = filePath.split('.').last.toLowerCase();
-      if (ext != 'epub' && ext != 'pdf') {
-        return const ImportResult(
-          success: false,
-          errorMessage:
-              'Unsupported file format. Textara supports EPUB and PDF files.',
+          errorMessage: validation.errorMessage,
         );
       }
 
       final bookId = _uuid.v4();
-      final format = ext == 'epub' ? BookFormat.epub : BookFormat.pdf;
+      final format = validation.extension == 'epub'
+          ? BookFormat.epub
+          : BookFormat.pdf;
 
       final destPath = await _fileStorage.copyBookToLibrary(filePath, bookId);
-      final fileSize = await _fileStorage.getFileSize(destPath);
+      final fileSize = validation.fileSizeBytes;
 
       String title = _extractFileNameWithoutExtension(filePath);
       String author = 'Unknown Author';
@@ -141,7 +140,7 @@ class ImportService {
         batch.insert('full_text_search', {
           'book_id': bookId,
           'chapter_id': chapterTexts[i].key,
-          'content': chapterTexts[i].value,
+          'content': _securityPolicy.boundedIndexContent(chapterTexts[i].value),
           'chapter_order': i,
         });
       }
