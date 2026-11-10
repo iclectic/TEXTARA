@@ -1,4 +1,11 @@
-enum BookFormat { epub, pdf }
+enum BookFormat {
+  epub,
+  pdf,
+  txt,
+  fb2,
+  /// PalmDB Mobipocket / unprotected AZW family (DRM never decrypted).
+  mobi,
+}
 
 enum ReadingStatus { notStarted, reading, finished }
 

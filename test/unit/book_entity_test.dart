@@ -51,6 +51,19 @@ void main() {
       expect(pdf.isEpub, false);
     });
 
+    test('text formats use chapter reader and badges', () {
+      final txt = book.copyWith(format: BookFormat.txt);
+      final fb2 = book.copyWith(format: BookFormat.fb2);
+      final mobi = book.copyWith(format: BookFormat.mobi);
+      expect(txt.usesChapterTextReader, isTrue);
+      expect(fb2.usesChapterTextReader, isTrue);
+      expect(mobi.usesChapterTextReader, isTrue);
+      expect(txt.formatBadgeLabel, 'TXT');
+      expect(fb2.formatBadgeLabel, 'FB2');
+      expect(mobi.formatBadgeLabel, 'MOBI');
+      expect(book.copyWith(format: BookFormat.pdf).usesChapterTextReader, isFalse);
+    });
+
     test('copyWith preserves unchanged fields', () {
       final updated = book.copyWith(title: 'New Title');
       expect(updated.title, 'New Title');

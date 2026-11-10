@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:textara/core/constants/app_constants.dart';
 
 class LibraryEmptyState extends StatelessWidget {
   final VoidCallback onImport;
@@ -8,6 +9,8 @@ class LibraryEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final limitMb =
+        (AppConstants.maxImportFileBytes / (1024 * 1024)).round();
 
     return Center(
       child: Padding(
@@ -38,7 +41,8 @@ class LibraryEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Import your DRM-free EPUB and PDF files to start reading. You can also use the share menu or Files app to send books here.',
+              'Import DRM-free ${AppConstants.supportedFormatsLabel} '
+              '(up to $limitMb MB each). Textara never removes DRM.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.5,

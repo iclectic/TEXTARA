@@ -24,8 +24,11 @@ import 'package:textara/data/services/brightness_service.dart';
 import 'package:textara/data/services/dictionary_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
+import 'package:textara/data/services/fb2_parser_service.dart';
 import 'package:textara/data/services/import_service.dart';
 import 'package:textara/data/services/export_service.dart';
+import 'package:textara/data/services/mobi_import_service.dart';
+import 'package:textara/data/services/txt_parser_service.dart';
 import 'package:textara/domain/entities/dictionary_entry.dart';
 import 'package:textara/domain/entities/ink_stroke.dart';
 
@@ -132,11 +135,26 @@ final epubParserProvider = Provider<EpubParserService>((ref) {
   return EpubParserService();
 });
 
+final txtParserProvider = Provider<TxtParserService>((ref) {
+  return TxtParserService();
+});
+
+final fb2ParserProvider = Provider<Fb2ParserService>((ref) {
+  return Fb2ParserService();
+});
+
+final mobiImportProvider = Provider<MobiImportService>((ref) {
+  return MobiImportService();
+});
+
 final importServiceProvider = Provider<ImportService>((ref) {
   return ImportService(
     ref.watch(bookDaoProvider),
     ref.watch(fileStorageProvider),
     ref.watch(epubParserProvider),
+    txtParser: ref.watch(txtParserProvider),
+    fb2Parser: ref.watch(fb2ParserProvider),
+    mobiImport: ref.watch(mobiImportProvider),
   );
 });
 

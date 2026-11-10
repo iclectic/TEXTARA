@@ -100,6 +100,31 @@ class Book extends Equatable {
 
   bool get isEpub => format == BookFormat.epub;
   bool get isPdf => format == BookFormat.pdf;
+  bool get isTxt => format == BookFormat.txt;
+  bool get isFb2 => format == BookFormat.fb2;
+  bool get isMobi => format == BookFormat.mobi;
+
+  /// Chapter-paged Flutter text reader (not the PDF viewer).
+  bool get usesChapterTextReader =>
+      format == BookFormat.epub ||
+      format == BookFormat.txt ||
+      format == BookFormat.fb2 ||
+      format == BookFormat.mobi;
+
+  String get formatBadgeLabel {
+    switch (format) {
+      case BookFormat.epub:
+        return 'EPUB';
+      case BookFormat.pdf:
+        return 'PDF';
+      case BookFormat.txt:
+        return 'TXT';
+      case BookFormat.fb2:
+        return 'FB2';
+      case BookFormat.mobi:
+        return 'MOBI';
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

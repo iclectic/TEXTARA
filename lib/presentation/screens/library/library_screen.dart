@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/data/services/import_service.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/widgets/library/book_grid_tile.dart';
@@ -36,25 +37,123 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final results = await importService.pickAndImportFiles();
 
     if (!mounted) return;
+    if (results.isEmpty) return;
 
     final successCount = results.where((r) => r.success).length;
-    final failCount = results.where((r) => !r.success).length;
+    final failures = results.where((r) => !r.success).toList();
 
-    if (results.isNotEmpty) {
+    if (successCount > 0) {
       ref.read(booksProvider.notifier).loadBooks();
-      String message;
-      if (failCount == 0) {
-        message = successCount == 1
-            ? 'Book imported successfully.'
-            : '$successCount books imported successfully.';
-      } else {
-        message =
-            '$successCount imported, $failCount failed. Check file format and try again.';
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
     }
+
+    if (failures.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            successCount == 1
+                ? 'Book imported successfully.'
+                : '$successCount books imported successfully.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final summary = successCount == 0
+        ? '${failures.length} import${failures.length == 1 ? '' : 's'} failed'
+        : '$successCount imported, ${failures.length} failed';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(summary),
+        action: SnackBarAction(
+          label: 'Details',
+          onPressed: () => _showImportFailures(failures),
+        ),
+        duration: const Duration(seconds: 6),
+      ),
+    );
+
+    // Always surface reasons when everything failed.
+    if (successCount == 0) {
+      await _showImportFailures(failures);
+    }
+  }
+
+  Future<void> _showImportFailures(List<ImportResult> failures) async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Import issues',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Textara never removes DRM. Files over the size limit or with unsupported compression are rejected with a reason.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: failures.length,
+                    separatorBuilder: (_, _) => const Divider(height: 16),
+                    itemBuilder: (context, index) {
+                      final item = failures[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.sourceFileName ?? 'Unknown file',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.errorMessage ?? 'Import failed.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.error,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _openBook(Book book) {

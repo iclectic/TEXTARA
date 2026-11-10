@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:textara/domain/entities/book.dart';
+import 'package:textara/presentation/widgets/library/format_badge.dart';
 
 class BookGridTile extends StatelessWidget {
   final Book book;
@@ -45,6 +46,11 @@ class BookGridTile extends StatelessWidget {
                           right: 0,
                           child: _buildProgressBar(theme),
                         ),
+                      Positioned(
+                        top: 6,
+                        left: 6,
+                        child: FormatBadge.forBook(book, compact: true),
+                      ),
                       if (book.isFavourite)
                         Positioned(
                           top: 6,
@@ -123,9 +129,7 @@ class BookGridTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            book.isEpub
-                ? Icons.menu_book_rounded
-                : Icons.picture_as_pdf_rounded,
+            formatIconFor(book.format),
             color: Colors.white.withValues(alpha: 0.8),
             size: 28,
           ),
