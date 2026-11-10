@@ -8,10 +8,13 @@ import 'package:textara/data/services/brightness_service.dart';
 import 'package:textara/data/services/reading_progress_persister.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/domain/entities/ink_stroke.dart';
 import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/reader/epub_reader_view.dart';
 import 'package:textara/presentation/screens/reader/pdf_reader_view.dart';
+import 'package:textara/presentation/widgets/reader/ink_canvas.dart';
+import 'package:textara/presentation/widgets/reader/ink_toolbar.dart';
 import 'package:textara/presentation/widgets/reader/reader_app_bar.dart';
 import 'package:textara/presentation/widgets/reader/reader_bottom_bar.dart';
 import 'package:textara/presentation/widgets/reader/reader_settings_sheet.dart';
@@ -73,6 +76,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       persister.dispose();
     }
     unawaited(_brightnessService?.reset() ?? Future<void>.value());
+    // Ensure next reader open starts with scroll-friendly ink-off.
+    try {
+      ref.read(inkToolProvider.notifier).state = InkTool.off;
+    } catch (_) {
+      // Provider may already be disposed during teardown.
+    }
     super.dispose();
   }
 
@@ -246,17 +255,56 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _brightnessGestureActive = false;
   }
 
+  Future<void> _confirmClearInk(InkStrokesNotifier notifier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear ink on this page?'),
+        content: const Text(
+          'This removes scribble strokes for the current page or chapter only.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await notifier.clearPage();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final brightnessHud = _brightnessHudValue;
+    final inkTool = ref.watch(inkToolProvider);
+    final location = _currentLocation();
+    final inkArgs = InkLocationArgs(
+      bookId: widget.book.id,
+      locationKey: location.inkLocationKey,
+    );
+    final inkAsync = ref.watch(inkStrokesProvider(inkArgs));
+    final inkNotifier = ref.read(inkStrokesProvider(inkArgs).notifier);
+    final strokes = inkAsync.valueOrNull ?? const <InkStroke>[];
+    final theme = Theme.of(context);
+    final topInset = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Reader content — tap toggles chrome (ignored while brightness-dragging).
+          // Reader content — tap toggles chrome (ignored while brightness-dragging
+          // or when ink tools are capturing pointers).
           GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: _brightnessGestureActive ? null : _toggleControls,
+            onTap: (_brightnessGestureActive || inkTool != InkTool.off)
+                ? null
+                : _toggleControls,
             child: widget.book.isEpub
                 ? EpubReaderView(
                     book: widget.book,
@@ -268,24 +316,38 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   ),
           ),
 
-          // Right-edge brightness gesture strip (does not block vertical scroll
-          // elsewhere on the page).
-          Positioned(
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: _brightnessEdgeWidth,
-            child: Semantics(
-              label: 'Brightness gesture area. Drag vertically to adjust.',
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onVerticalDragStart: _onBrightnessDragStart,
-                onVerticalDragUpdate: _onBrightnessDragUpdate,
-                onVerticalDragEnd: _onBrightnessDragEnd,
-                onVerticalDragCancel: () => _brightnessGestureActive = false,
-              ),
+          // Ink overlay — when tool is off, IgnorePointer lets scroll through.
+          Positioned.fill(
+            child: InkCanvas(
+              bookId: widget.book.id,
+              locationKey: location.inkLocationKey,
+              tool: inkTool,
+              strokes: strokes,
+              penColor: theme.colorScheme.onSurface,
+              onStrokeCommitted: inkNotifier.addStroke,
+              onStrokesErased: inkNotifier.eraseStrokes,
             ),
           ),
+
+          // Right-edge brightness gesture strip (does not block vertical scroll
+          // elsewhere on the page). Hidden while ink tools are active.
+          if (inkTool == InkTool.off)
+            Positioned(
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: _brightnessEdgeWidth,
+              child: Semantics(
+                label: 'Brightness gesture area. Drag vertically to adjust.',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragStart: _onBrightnessDragStart,
+                  onVerticalDragUpdate: _onBrightnessDragUpdate,
+                  onVerticalDragEnd: _onBrightnessDragEnd,
+                  onVerticalDragCancel: () => _brightnessGestureActive = false,
+                ),
+              ),
+            ),
 
           if (brightnessHud != null)
             Center(
@@ -342,6 +404,24 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 },
                 onBookmark: _addBookmark,
                 onSettings: _showSettings,
+              ),
+            ),
+
+          // Ink tool chrome — visible with controls so users can arm pen/eraser.
+          if (_showControls)
+            Positioned(
+              top: topInset + 56,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: InkToolbar(
+                  tool: inkTool,
+                  onToolChanged: (tool) {
+                    ref.read(inkToolProvider.notifier).state = tool;
+                  },
+                  onClearPage:
+                      strokes.isEmpty ? null : () => _confirmClearInk(inkNotifier),
+                ),
               ),
             ),
 

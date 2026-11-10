@@ -35,6 +35,10 @@ class ReaderLocation extends Equatable {
     return 'Chapter ${pageIndex + 1}';
   }
 
+  /// Stable key for per-page/chapter ink storage.
+  String get inkLocationKey =>
+      '${format.name}|$pageIndex|${chapterId ?? ''}';
+
   ReaderLocation copyWith({
     BookFormat? format,
     int? pageIndex,

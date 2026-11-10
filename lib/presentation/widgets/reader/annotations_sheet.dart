@@ -336,6 +336,63 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     );
   }
 
+  Future<void> _editHighlightNote(Highlight highlight) async {
+    final controller = TextEditingController(text: highlight.note ?? '');
+    final saved = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(highlight.hasNote ? 'Edit note' : 'Add note'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 6,
+            minLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Your thoughts on this passage…',
+              alignLabelWithHint: true,
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            if (highlight.hasNote)
+              TextButton(
+                onPressed: () => Navigator.pop(context, ''),
+                child: const Text('Clear'),
+              ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    if (saved == null) return;
+
+    final trimmed = saved.trim();
+    final updated = Highlight(
+      id: highlight.id,
+      bookId: highlight.bookId,
+      chapterId: highlight.chapterId,
+      selectedText: highlight.selectedText,
+      colour: highlight.colour,
+      note: trimmed.isEmpty ? null : trimmed,
+      startOffset: highlight.startOffset,
+      endOffset: highlight.endOffset,
+      cfiRange: highlight.cfiRange,
+      createdAt: highlight.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await ref.read(annotationDaoProvider).updateHighlight(updated);
+    ref.invalidate(bookHighlightsProvider(widget.bookId));
+  }
+
   Widget _buildHighlightTile(Highlight highlight, ThemeData theme) {
     return Card(
       margin: EdgeInsets.zero,
@@ -363,6 +420,16 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                       fontSize: 11,
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    highlight.hasNote
+                        ? Icons.sticky_note_2_rounded
+                        : Icons.note_add_outlined,
+                  ),
+                  iconSize: 18,
+                  tooltip: highlight.hasNote ? 'Edit note' : 'Add note',
+                  onPressed: () => _editHighlightNote(highlight),
                 ),
                 IconButton(
                   icon: const Icon(Icons.account_tree_outlined),
@@ -405,26 +472,30 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
             ),
             if (highlight.hasNote) ...[
               const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.sticky_note_2_outlined,
-                    size: 14,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      highlight.note!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
+              InkWell(
+                onTap: () => _editHighlightNote(highlight),
+                borderRadius: BorderRadius.circular(6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.sticky_note_2_outlined,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        highlight.note!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ],

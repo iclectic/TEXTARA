@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
@@ -18,6 +19,7 @@ import 'package:textara/data/database/book_dao.dart';
 import 'package:textara/data/database/annotation_dao.dart';
 import 'package:textara/data/database/collection_dao.dart';
 import 'package:textara/data/database/idea_thread_dao.dart';
+import 'package:textara/data/database/ink_stroke_dao.dart';
 import 'package:textara/data/services/brightness_service.dart';
 import 'package:textara/data/services/dictionary_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
@@ -25,6 +27,7 @@ import 'package:textara/data/services/epub_parser_service.dart';
 import 'package:textara/data/services/import_service.dart';
 import 'package:textara/data/services/export_service.dart';
 import 'package:textara/domain/entities/dictionary_entry.dart';
+import 'package:textara/domain/entities/ink_stroke.dart';
 
 // Database and DAOs
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
@@ -46,6 +49,79 @@ final collectionDaoProvider = Provider<CollectionDao>((ref) {
 final ideaThreadDaoProvider = Provider<IdeaThreadDao>((ref) {
   return IdeaThreadDao(ref.watch(databaseHelperProvider));
 });
+
+final inkStrokeDaoProvider = Provider<InkStrokeDao>((ref) {
+  return InkStrokeDao(ref.watch(databaseHelperProvider));
+});
+
+/// Active ink tool for the open reader. Defaults to off so scroll is unaffected.
+final inkToolProvider = StateProvider<InkTool>((ref) => InkTool.off);
+
+/// Strokes for one book + [ReaderLocation.inkLocationKey].
+final inkStrokesProvider = StateNotifierProvider.autoDispose
+    .family<InkStrokesNotifier, AsyncValue<List<InkStroke>>, InkLocationArgs>(
+  (ref, args) {
+    return InkStrokesNotifier(ref.watch(inkStrokeDaoProvider), args);
+  },
+);
+
+class InkLocationArgs extends Equatable {
+  final String bookId;
+  final String locationKey;
+
+  const InkLocationArgs({required this.bookId, required this.locationKey});
+
+  @override
+  List<Object?> get props => [bookId, locationKey];
+}
+
+class InkStrokesNotifier extends StateNotifier<AsyncValue<List<InkStroke>>> {
+  InkStrokesNotifier(this._dao, this._args)
+      : super(const AsyncValue.loading()) {
+    _load();
+  }
+
+  final InkStrokeDao _dao;
+  final InkLocationArgs _args;
+
+  Future<void> _load() async {
+    try {
+      final strokes = await _dao.getStrokesForLocation(
+        bookId: _args.bookId,
+        locationKey: _args.locationKey,
+      );
+      if (!mounted) return;
+      state = AsyncValue.data(strokes);
+    } catch (e, st) {
+      if (!mounted) return;
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> addStroke(InkStroke stroke) async {
+    final current = state.valueOrNull ?? const <InkStroke>[];
+    state = AsyncValue.data([...current, stroke]);
+    await _dao.insertStroke(stroke);
+  }
+
+  Future<void> eraseStrokes(Iterable<String> ids) async {
+    final idSet = ids.toSet();
+    if (idSet.isEmpty) return;
+    final current = state.valueOrNull ?? const <InkStroke>[];
+    state = AsyncValue.data(
+      current.where((stroke) => !idSet.contains(stroke.id)).toList(),
+    );
+    await _dao.deleteStrokes(idSet);
+  }
+
+  Future<void> clearPage() async {
+    state = const AsyncValue.data([]);
+    await _dao.clearLocation(
+      bookId: _args.bookId,
+      locationKey: _args.locationKey,
+    );
+  }
+}
 
 // Services
 final fileStorageProvider = Provider<FileStorageService>((ref) {

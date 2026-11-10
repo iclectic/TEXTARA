@@ -178,9 +178,13 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
       ref.invalidate(bookHighlightsProvider(widget.book.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Highlight saved'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: const Text('Highlight saved'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Add note',
+            onPressed: () => _promptHighlightNote(highlight),
+          ),
         ),
       );
     } catch (_) {
@@ -189,6 +193,54 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Could not save highlight')));
     }
+  }
+
+  Future<void> _promptHighlightNote(Highlight highlight) async {
+    final controller = TextEditingController();
+    final note = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add note'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 5,
+          minLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Your thoughts on this passage…',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Skip'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (note == null || note.trim().isEmpty) return;
+
+    final updated = Highlight(
+      id: highlight.id,
+      bookId: highlight.bookId,
+      chapterId: highlight.chapterId,
+      selectedText: highlight.selectedText,
+      colour: highlight.colour,
+      note: note.trim(),
+      startOffset: highlight.startOffset,
+      endOffset: highlight.endOffset,
+      cfiRange: highlight.cfiRange,
+      createdAt: highlight.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await ref.read(annotationDaoProvider).updateHighlight(updated);
+    ref.invalidate(bookHighlightsProvider(widget.book.id));
   }
 
   @override
