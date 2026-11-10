@@ -66,6 +66,17 @@ void main() {
       expect(restored.progress, 0.5);
     });
 
+    test('inkLocationKey ignores progress', () {
+      const a = ReaderLocation(
+        format: BookFormat.epub,
+        pageIndex: 1,
+        chapterId: 'One',
+        progress: 0.1,
+      );
+      expect(a.copyWith(progress: 0.8).inkLocationKey, a.inkLocationKey);
+      expect(a.inkLocationKey, 'epub|1|One');
+    });
+
     test('legacy bookmarks without token still resolve by pageNumber', () {
       final bookmark = Bookmark(
         id: 'b2',
