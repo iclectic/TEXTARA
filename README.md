@@ -1,6 +1,6 @@
 # Textara
 
-A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessible, and fully offline.
+A premium, DRM-free multi-format ebook reader built with Flutter. Beautiful, accessible, and fully offline by default.
 
 ## Setup Instructions
 
@@ -55,9 +55,11 @@ lib/
     repositories/           # Repository interfaces (contracts)
   data/                     # Data layer implementation
     database/               # SQLite via sqflite (DAOs for books, annotations, collections)
-    services/               # File storage, EPUB parsing, import/export
+    repositories/           # Repository implementations
+    services/               # File storage, parsers, import/export, caches
   presentation/             # UI layer
     providers/              # Riverpod state management
+    view_models/            # Session controllers (e.g. reader progress/brightness)
     screens/                # Full-page screens (library, reader, settings, onboarding)
     widgets/                # Reusable UI components
 ```
@@ -89,7 +91,7 @@ We render EPUB content using Flutter-native widgets (PageView + SelectableText) 
 - Sort by title, author, date added, recently opened, progress
 - Search across title, author, tags, and EPUB full text
 - Favourites, tags, collections, reading status tracking
-- Import via file picker (EPUB and PDF)
+- Import via file picker (EPUB, PDF, TXT, FB2, DRM-free MOBI/AZW)
 
 ### Reader
 - EPUB: paginated chapter view with full typography controls
@@ -116,7 +118,8 @@ We render EPUB content using Flutter-native widgets (PageView + SelectableText) 
 ### Data
 - Export/import full backup as JSON (books, highlights, bookmarks, collections)
 - Validates imported data carefully
-- No account required, no network dependency
+- No account required; offline by default (see [PRIVACY.md](PRIVACY.md))
+- Optional online dictionary fallback is **off** unless enabled in Settings
 
 ## Testing
 
@@ -124,12 +127,18 @@ We render EPUB content using Flutter-native widgets (PageView + SelectableText) 
 # Run all tests
 flutter test
 
+# Static analysis + format (also run in CI)
+flutter analyze lib test
+dart format --output=none --set-exit-if-changed lib test
+
 # Run unit tests only
 flutter test test/unit/
 
 # Run widget tests only
 flutter test test/widget/
 ```
+
+CI workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (analyze, format, test).
 
 ### Test Coverage
 
@@ -169,7 +178,7 @@ flutter test test/widget/
 
 **Textara: Your Books, Beautifully Read**
 
-Textara is a thoughtfully crafted reading app for your DRM-free EPUB and PDF library. No accounts, no ads, no internet required.
+Textara is a thoughtfully crafted reading app for your DRM-free library (EPUB, PDF, TXT, FB2, and DRM-free MOBI). No accounts, no ads, offline by default.
 
 Import your books and enjoy a premium reading experience with deep customisation: choose from 8 handcrafted themes, adjust typography to your preference, and read comfortably with accessibility modes designed for every reader.
 
@@ -178,7 +187,7 @@ Highlight passages, write notes, and export your annotations to Markdown or PDF.
 Your books stay on your device. Your data belongs to you.
 
 **Key features:**
-- Read DRM-free EPUB and PDF files
+- Read DRM-free EPUB, PDF, TXT, FB2, and classic MOBI files
 - 8 beautiful reading themes including OLED black and sepia
 - Full typography controls: font, size, spacing, alignment
 - Highlights with colour choices and attached notes

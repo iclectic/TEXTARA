@@ -82,8 +82,9 @@ class ContinueReadingCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: book.readingProgress.clamp(0.0, 1.0),
                     minHeight: 6,
-                    backgroundColor:
-                        theme.colorScheme.primary.withValues(alpha: 0.12),
+                    backgroundColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.12,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),

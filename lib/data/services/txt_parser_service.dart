@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:textara/domain/entities/parsed_text_book.dart';
 
 class TxtParserService {
-  Future<ParsedTextBook> parseFile(String filePath, {String? fallbackTitle}) async {
+  Future<ParsedTextBook> parseFile(
+    String filePath, {
+    String? fallbackTitle,
+  }) async {
     final file = File(filePath);
     final bytes = await file.readAsBytes();
     final text = _decodeBytes(bytes);
@@ -119,7 +122,9 @@ class TxtParserService {
       final title = firstLineEnd == -1
           ? block
           : block.substring(0, firstLineEnd).trim();
-      final body = firstLineEnd == -1 ? '' : block.substring(firstLineEnd).trim();
+      final body = firstLineEnd == -1
+          ? ''
+          : block.substring(firstLineEnd).trim();
       chapters.add(
         TextChapter(
           title: title.isEmpty ? 'Chapter ${i + 1}' : title,

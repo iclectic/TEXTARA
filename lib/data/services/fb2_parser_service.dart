@@ -4,9 +4,15 @@ import 'package:xml/xml.dart';
 import 'package:textara/domain/entities/parsed_text_book.dart';
 
 class Fb2ParserService {
-  Future<ParsedTextBook> parseFile(String filePath, {String? fallbackTitle}) async {
+  Future<ParsedTextBook> parseFile(
+    String filePath, {
+    String? fallbackTitle,
+  }) async {
     final raw = await File(filePath).readAsString();
-    return parseXml(raw, fallbackTitle: fallbackTitle ?? _titleFromPath(filePath));
+    return parseXml(
+      raw,
+      fallbackTitle: fallbackTitle ?? _titleFromPath(filePath),
+    );
   }
 
   ParsedTextBook parseXml(String raw, {required String fallbackTitle}) {
@@ -17,8 +23,8 @@ class Fb2ParserService {
     }
 
     final titleInfo = _firstDescendant(root, 'title-info');
-    final title = _textOf(_firstDescendant(titleInfo, 'book-title')) ??
-        fallbackTitle;
+    final title =
+        _textOf(_firstDescendant(titleInfo, 'book-title')) ?? fallbackTitle;
     final author = _authorFrom(titleInfo) ?? 'Unknown Author';
     final language = _textOf(_firstDescendant(titleInfo, 'lang'));
 
@@ -78,10 +84,11 @@ class Fb2ParserService {
     final middle = _textOf(_firstDescendant(author, 'middle-name')) ?? '';
     final last = _textOf(_firstDescendant(author, 'last-name')) ?? '';
     final nick = _textOf(_firstDescendant(author, 'nickname'));
-    final parts = [first, middle, last]
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
+    final parts = [
+      first,
+      middle,
+      last,
+    ].map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
     if (parts.isNotEmpty) return parts.join(' ');
     if (nick != null && nick.trim().isNotEmpty) return nick.trim();
     return null;
@@ -102,11 +109,15 @@ class Fb2ParserService {
     final buffer = StringBuffer();
     for (final element in root.descendants.whereType<XmlElement>()) {
       final name = element.name.local.toLowerCase();
-      if (name == 'p' || name == 'v' || name == 'text-author' || name == 'subtitle') {
+      if (name == 'p' ||
+          name == 'v' ||
+          name == 'text-author' ||
+          name == 'subtitle') {
         // Skip nested title paragraphs already used as chapter titles when
         // they are direct children of <title>.
         if (element.parent is XmlElement &&
-            (element.parent as XmlElement).name.local.toLowerCase() == 'title') {
+            (element.parent as XmlElement).name.local.toLowerCase() ==
+                'title') {
           continue;
         }
         final text = element.innerText.trim();

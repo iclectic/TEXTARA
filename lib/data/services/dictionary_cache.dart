@@ -58,10 +58,7 @@ class DictionaryCache {
       map.remove(map.keys.first);
     }
 
-    await prefs.setString(
-      AppConstants.prefKeyDictionaryCache,
-      jsonEncode(map),
-    );
+    await prefs.setString(AppConstants.prefKeyDictionaryCache, jsonEncode(map));
   }
 
   Future<void> clear() async {

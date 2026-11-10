@@ -3,11 +3,7 @@ import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/continue_reading.dart';
 
-Book _book({
-  required String id,
-  required double progress,
-  DateTime? opened,
-}) {
+Book _book({required String id, required double progress, DateTime? opened}) {
   return Book(
     id: id,
     title: id,

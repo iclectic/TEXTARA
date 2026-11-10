@@ -270,9 +270,8 @@ class _InkPainter extends CustomPainter {
       path.lineTo(points[i].x, points[i].y);
     }
 
-    final avgPressure = points
-            .map((p) => p.pressure)
-            .fold<double>(0, (a, b) => a + b) /
+    final avgPressure =
+        points.map((p) => p.pressure).fold<double>(0, (a, b) => a + b) /
         points.length;
     final width = (baseWidth * (0.65 + avgPressure * 0.7)).clamp(1.0, 18.0);
 

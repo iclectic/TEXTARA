@@ -2,18 +2,46 @@ import 'dart:async';
 
 import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/data/database/book_dao.dart';
+import 'package:textara/domain/repositories/book_repository.dart';
+
+typedef ReadingProgressWrite =
+    Future<void> Function(
+      String bookId,
+      double progress,
+      int page,
+      String? chapterId,
+    );
 
 /// Debounces SQLite writing of reading progress during rapid page changes.
 ///
-/// Writes only to the `books` auto-resume fields via [BookDao.updateReadingProgress].
-/// Manual bookmarks live in the separate `bookmarks` table and are never modified here.
+/// Writes only to the `books` auto-resume fields. Manual bookmarks live in the
+/// separate `bookmarks` table and are never modified here.
 class ReadingProgressPersister {
   ReadingProgressPersister(
-    this._bookDao, {
+    BookDao bookDao, {
+    this.debounce = AppConstants.readingProgressDebounce,
+  }) : _write = bookDao.updateReadingProgress;
+
+  factory ReadingProgressPersister.fromRepository(
+    BookRepository books, {
+    Duration debounce = AppConstants.readingProgressDebounce,
+  }) {
+    return ReadingProgressPersister._((bookId, progress, page, chapterId) {
+      return books.updateReadingProgress(
+        bookId: bookId,
+        progress: progress,
+        page: page,
+        chapterId: chapterId,
+      );
+    }, debounce: debounce);
+  }
+
+  ReadingProgressPersister._(
+    this._write, {
     this.debounce = AppConstants.readingProgressDebounce,
   });
 
-  final BookDao _bookDao;
+  final ReadingProgressWrite _write;
   final Duration debounce;
 
   Timer? _timer;
@@ -43,7 +71,7 @@ class ReadingProgressPersister {
     final pending = _pending;
     if (pending == null) return;
     _pending = null;
-    await _bookDao.updateReadingProgress(
+    await _write(
       pending.bookId,
       pending.progress,
       pending.page,

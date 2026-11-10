@@ -14,9 +14,7 @@ void main() {
       MaterialApp(
         title: AppConstants.appName,
         theme: LeafTheme.fromAppTheme(BuiltInThemes.porcelain),
-        home: const Scaffold(
-          body: Center(child: Text('Textara')),
-        ),
+        home: const Scaffold(body: Center(child: Text('Textara'))),
       ),
     );
 

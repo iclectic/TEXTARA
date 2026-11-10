@@ -141,11 +141,7 @@ class MobiImportService {
     final author = _mobiAuthor(header) ?? 'Unknown Author';
     final chapters = _chaptersFromHtml(rawHtml, title);
 
-    return ParsedTextBook(
-      title: title,
-      author: author,
-      chapters: chapters,
-    );
+    return ParsedTextBook(title: title, author: author, chapters: chapters);
   }
 
   /// Lightweight DRM / container probe used by import validation messaging.
@@ -244,7 +240,8 @@ class MobiImportService {
     if (start < 0 || end > header.length || fullNameLength <= 0) {
       return fallback;
     }
-    final title = utf8.decode(header.sublist(start, end), allowMalformed: true)
+    final title = utf8
+        .decode(header.sublist(start, end), allowMalformed: true)
         .trim();
     return title.isEmpty ? fallback : title;
   }

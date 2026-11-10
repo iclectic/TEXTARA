@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/data/services/chapter_text_cache.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/parsed_text_book.dart';
 import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
@@ -45,25 +49,57 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
 
   Future<void> _loadEpub() async {
     try {
-      final parser = ref.read(epubParserProvider);
-      final epubBook = await parser.parseEpub(widget.book.filePath);
-      final chapters = epubBook.chapters;
-      final loaded = <_ChapterContent>[];
+      final cache = ref.read(chapterTextCacheProvider);
+      final modifiedMs = await _fileModifiedMs(widget.book.filePath);
+      final cacheKey = ChapterTextCache.keyFor(
+        bookId: widget.book.id,
+        filePath: widget.book.filePath,
+        modifiedMs: modifiedMs,
+      );
+      final cached = cache.get(cacheKey);
 
-      for (int i = 0; i < chapters.length; i++) {
-        final chapter = chapters[i];
-        final html = chapter.htmlContent ?? '';
-        if (html.isEmpty) continue;
+      late final List<_ChapterContent> loaded;
+      if (cached != null && cached.chapters.isNotEmpty) {
+        loaded = [
+          for (final chapter in cached.chapters)
+            _ChapterContent(
+              title: chapter.title,
+              text: chapter.text,
+              htmlContent: '',
+            ),
+        ];
+      } else {
+        final parser = ref.read(epubParserProvider);
+        final epubBook = await parser.parseEpub(widget.book.filePath);
+        final chapters = epubBook.chapters;
+        loaded = <_ChapterContent>[];
 
-        final document = html_parser.parse(html);
-        final text = document.body?.text ?? '';
-        if (text.trim().isEmpty) continue;
+        for (int i = 0; i < chapters.length; i++) {
+          final chapter = chapters[i];
+          final html = chapter.htmlContent ?? '';
+          if (html.isEmpty) continue;
 
-        loaded.add(
-          _ChapterContent(
-            title: chapter.title ?? 'Chapter ${i + 1}',
-            text: text.trim(),
-            htmlContent: html,
+          final document = html_parser.parse(html);
+          final text = document.body?.text ?? '';
+          if (text.trim().isEmpty) continue;
+
+          loaded.add(
+            _ChapterContent(
+              title: chapter.title ?? 'Chapter ${i + 1}',
+              text: text.trim(),
+              htmlContent: html,
+            ),
+          );
+        }
+
+        cache.put(
+          cacheKey,
+          ParsedTextBook(
+            title: widget.book.title,
+            author: widget.book.author,
+            chapters: [
+              for (final c in loaded) TextChapter(title: c.title, text: c.text),
+            ],
           ),
         );
       }
@@ -75,8 +111,9 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
       });
 
       // Restore auto-resume position (chapter index is typography-stable).
-      final resume = ReaderLocation.fromBook(widget.book)
-          .preservedAcrossTypographyChange();
+      final resume = ReaderLocation.fromBook(
+        widget.book,
+      ).preservedAcrossTypographyChange();
       if (resume.pageIndex > 0 && resume.pageIndex < _chapters.length) {
         _pageController.jumpToPage(resume.pageIndex);
         _currentChapterIndex = resume.pageIndex;
@@ -90,6 +127,15 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
         _error =
             'Could not open this EPUB file. It may be damaged or in an unsupported format.';
       });
+    }
+  }
+
+  Future<int> _fileModifiedMs(String path) async {
+    try {
+      final stat = await File(path).stat();
+      return stat.modified.millisecondsSinceEpoch;
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -368,10 +414,7 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
                     label: 'Look up',
                     onPressed: () {
                       editableTextState.hideToolbar();
-                      showDictionarySheet(
-                        context,
-                        selection: selectedText,
-                      );
+                      showDictionarySheet(context, selection: selectedText);
                     },
                   ),
                   ContextMenuButtonItem(

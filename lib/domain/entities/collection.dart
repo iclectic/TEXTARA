@@ -36,22 +36,22 @@ class Collection extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory Collection.fromJson(Map<String, dynamic> json) => Collection(
-        id: json['id'] as String,
-        name: json['name'] as String? ?? 'Untitled Collection',
-        description: json['description'] as String?,
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-            DateTime.now(),
-        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
-            DateTime.now(),
-      );
+    id: json['id'] as String,
+    name: json['name'] as String? ?? 'Untitled Collection',
+    description: json['description'] as String?,
+    createdAt:
+        DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+    updatedAt:
+        DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [id];

@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/data/services/chapter_text_cache.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/parsed_text_book.dart';
@@ -46,35 +49,55 @@ class _TextReaderViewState extends ConsumerState<TextReaderView> {
 
   Future<void> _load() async {
     try {
-      late final ParsedTextBook parsed;
-      switch (widget.book.format) {
-        case BookFormat.txt:
-          parsed = await ref.read(txtParserProvider).parseFile(
-                widget.book.filePath,
-                fallbackTitle: widget.book.title,
-              );
-        case BookFormat.fb2:
-          parsed = await ref.read(fb2ParserProvider).parseFile(
-                widget.book.filePath,
-                fallbackTitle: widget.book.title,
-              );
-        case BookFormat.mobi:
-          parsed = await ref.read(mobiImportProvider).convertFile(
-                widget.book.filePath,
-                fallbackTitle: widget.book.title,
-              );
-        default:
-          throw StateError('TextReaderView cannot open ${widget.book.format}');
+      final cache = ref.read(chapterTextCacheProvider);
+      final modifiedMs = await _fileModifiedMs(widget.book.filePath);
+      final cacheKey = ChapterTextCache.keyFor(
+        bookId: widget.book.id,
+        filePath: widget.book.filePath,
+        modifiedMs: modifiedMs,
+      );
+      var parsed = cache.get(cacheKey);
+
+      if (parsed == null) {
+        switch (widget.book.format) {
+          case BookFormat.txt:
+            parsed = await ref
+                .read(txtParserProvider)
+                .parseFile(
+                  widget.book.filePath,
+                  fallbackTitle: widget.book.title,
+                );
+          case BookFormat.fb2:
+            parsed = await ref
+                .read(fb2ParserProvider)
+                .parseFile(
+                  widget.book.filePath,
+                  fallbackTitle: widget.book.title,
+                );
+          case BookFormat.mobi:
+            parsed = await ref
+                .read(mobiImportProvider)
+                .convertFile(
+                  widget.book.filePath,
+                  fallbackTitle: widget.book.title,
+                );
+          default:
+            throw StateError(
+              'TextReaderView cannot open ${widget.book.format}',
+            );
+        }
+        cache.put(cacheKey, parsed);
       }
 
       if (!mounted) return;
       setState(() {
-        _chapters = parsed.chapters;
+        _chapters = parsed!.chapters;
         _isLoading = false;
       });
 
-      final resume = ReaderLocation.fromBook(widget.book)
-          .preservedAcrossTypographyChange();
+      final resume = ReaderLocation.fromBook(
+        widget.book,
+      ).preservedAcrossTypographyChange();
       if (resume.pageIndex > 0 && resume.pageIndex < _chapters.length) {
         _pageController.jumpToPage(resume.pageIndex);
         _currentChapterIndex = resume.pageIndex;
@@ -87,6 +110,15 @@ class _TextReaderViewState extends ConsumerState<TextReaderView> {
         _error =
             'Could not open this ${widget.book.formatBadgeLabel} file. It may be damaged or unsupported.';
       });
+    }
+  }
+
+  Future<int> _fileModifiedMs(String path) async {
+    try {
+      final stat = await File(path).stat();
+      return stat.modified.millisecondsSinceEpoch;
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -179,9 +211,9 @@ class _TextReaderViewState extends ConsumerState<TextReaderView> {
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save highlight')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not save highlight')));
     }
   }
 

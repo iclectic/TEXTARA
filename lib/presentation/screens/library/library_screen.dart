@@ -158,7 +158,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   void _openBook(Book book) {
     HapticFeedback.lightImpact();
-    ref.read(bookDaoProvider).updateLastOpened(book.id);
+    ref.read(bookRepositoryProvider).updateLastOpened(book.id);
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => ReaderScreen(book: book)));
@@ -337,15 +337,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               crossAxisSpacing: 16,
               childAspectRatio: 0.62,
             ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return BookGridTile(
-                  book: books[index],
-                  onTap: () => _openBook(books[index]),
-                );
-              },
-              childCount: books.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return BookGridTile(
+                book: books[index],
+                onTap: () => _openBook(books[index]),
+              );
+            }, childCount: books.length),
           ),
         ),
       ],

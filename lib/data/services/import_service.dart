@@ -45,10 +45,10 @@ class ImportService {
     Fb2ParserService? fb2Parser,
     MobiImportService? mobiImport,
     ImportSecurityPolicy? securityPolicy,
-  })  : _txtParser = txtParser ?? TxtParserService(),
-        _fb2Parser = fb2Parser ?? Fb2ParserService(),
-        _mobiImport = mobiImport ?? MobiImportService(),
-        _securityPolicy = securityPolicy ?? ImportSecurityPolicy();
+  }) : _txtParser = txtParser ?? TxtParserService(),
+       _fb2Parser = fb2Parser ?? Fb2ParserService(),
+       _mobiImport = mobiImport ?? MobiImportService(),
+       _securityPolicy = securityPolicy ?? ImportSecurityPolicy();
 
   factory ImportService.create() {
     final dbHelper = DatabaseHelper();

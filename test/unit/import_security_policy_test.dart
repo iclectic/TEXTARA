@@ -78,10 +78,7 @@ void main() {
     });
 
     test('size-limit message includes megabyte ceiling', () async {
-      expect(
-        ImportSecurityPolicy.maxBookFileBytes,
-        500 * 1024 * 1024,
-      );
+      expect(ImportSecurityPolicy.maxBookFileBytes, 500 * 1024 * 1024);
     });
 
     test('accepts JSON backups under the size limit', () async {

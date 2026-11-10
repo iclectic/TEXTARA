@@ -86,9 +86,7 @@ class _DictionarySheetState extends ConsumerState<DictionarySheet> {
                   child: ListView(
                     controller: controller,
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    children: [
-                      _buildBody(theme, result, onlineEnabled),
-                    ],
+                    children: [_buildBody(theme, result, onlineEnabled)],
                   ),
                 ),
               ],
@@ -131,8 +129,8 @@ class _DictionarySheetState extends ConsumerState<DictionarySheet> {
           actionLabel: onlineEnabled ? 'Try again' : null,
           onAction: onlineEnabled
               ? () => ref
-                  .read(dictionaryLookupProvider.notifier)
-                  .lookup(widget.selection)
+                    .read(dictionaryLookupProvider.notifier)
+                    .lookup(widget.selection)
               : null,
         );
       case DictionaryLookupStatus.found:

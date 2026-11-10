@@ -61,43 +61,41 @@ class ReaderSettings extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'fontFamily': fontFamily,
-        'fontSize': fontSize,
-        'lineHeight': lineHeight,
-        'paragraphSpacing': paragraphSpacing,
-        'horizontalMargin': horizontalMargin,
-        'pageWidth': pageWidth,
-        'textAlignment': textAlignment.name,
-        'hyphenationEnabled': hyphenationEnabled,
-        'themeMode': themeMode.name,
-        'customThemeId': customThemeId,
-        'brightness': brightness,
-      };
+    'fontFamily': fontFamily,
+    'fontSize': fontSize,
+    'lineHeight': lineHeight,
+    'paragraphSpacing': paragraphSpacing,
+    'horizontalMargin': horizontalMargin,
+    'pageWidth': pageWidth,
+    'textAlignment': textAlignment.name,
+    'hyphenationEnabled': hyphenationEnabled,
+    'themeMode': themeMode.name,
+    'customThemeId': customThemeId,
+    'brightness': brightness,
+  };
 
   factory ReaderSettings.fromJson(Map<String, dynamic> json) => ReaderSettings(
-        fontFamily: json['fontFamily'] as String? ?? 'Literata',
-        fontSize: (json['fontSize'] as num?)?.toDouble() ?? 16.0,
-        lineHeight: (json['lineHeight'] as num?)?.toDouble() ?? 1.6,
-        paragraphSpacing:
-            (json['paragraphSpacing'] as num?)?.toDouble() ?? 12.0,
-        horizontalMargin:
-            (json['horizontalMargin'] as num?)?.toDouble() ?? 24.0,
-        pageWidth: (json['pageWidth'] as num?)?.toDouble() ?? 1.0,
-        textAlignment: TextAlignment.values.firstWhere(
-          (e) => e.name == json['textAlignment'],
-          orElse: () => TextAlignment.left,
-        ),
-        hyphenationEnabled: json['hyphenationEnabled'] as bool? ?? false,
-        themeMode: ReaderThemeMode.values.firstWhere(
-          (e) => e.name == json['themeMode'],
-          orElse: () => ReaderThemeMode.light,
-        ),
-        customThemeId: json['customThemeId'] as String?,
-        brightness: _clampBrightness(
-          (json['brightness'] as num?)?.toDouble() ??
-              AppConstants.defaultReaderBrightness,
-        ),
-      );
+    fontFamily: json['fontFamily'] as String? ?? 'Literata',
+    fontSize: (json['fontSize'] as num?)?.toDouble() ?? 16.0,
+    lineHeight: (json['lineHeight'] as num?)?.toDouble() ?? 1.6,
+    paragraphSpacing: (json['paragraphSpacing'] as num?)?.toDouble() ?? 12.0,
+    horizontalMargin: (json['horizontalMargin'] as num?)?.toDouble() ?? 24.0,
+    pageWidth: (json['pageWidth'] as num?)?.toDouble() ?? 1.0,
+    textAlignment: TextAlignment.values.firstWhere(
+      (e) => e.name == json['textAlignment'],
+      orElse: () => TextAlignment.left,
+    ),
+    hyphenationEnabled: json['hyphenationEnabled'] as bool? ?? false,
+    themeMode: ReaderThemeMode.values.firstWhere(
+      (e) => e.name == json['themeMode'],
+      orElse: () => ReaderThemeMode.light,
+    ),
+    customThemeId: json['customThemeId'] as String?,
+    brightness: _clampBrightness(
+      (json['brightness'] as num?)?.toDouble() ??
+          AppConstants.defaultReaderBrightness,
+    ),
+  );
 
   static double _clampBrightness(double value) {
     if (value < AppConstants.minReaderBrightness) {
@@ -111,16 +109,16 @@ class ReaderSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        fontFamily,
-        fontSize,
-        lineHeight,
-        paragraphSpacing,
-        horizontalMargin,
-        pageWidth,
-        textAlignment,
-        hyphenationEnabled,
-        themeMode,
-        customThemeId,
-        brightness,
-      ];
+    fontFamily,
+    fontSize,
+    lineHeight,
+    paragraphSpacing,
+    horizontalMargin,
+    pageWidth,
+    textAlignment,
+    hyphenationEnabled,
+    themeMode,
+    customThemeId,
+    brightness,
+  ];
 }

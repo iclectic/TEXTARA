@@ -36,8 +36,7 @@ class ReaderLocation extends Equatable {
   }
 
   /// Stable key for per-page/chapter ink storage.
-  String get inkLocationKey =>
-      '${format.name}|$pageIndex|${chapterId ?? ''}';
+  String get inkLocationKey => '${format.name}|$pageIndex|${chapterId ?? ''}';
 
   ReaderLocation copyWith({
     BookFormat? format,
@@ -56,12 +55,12 @@ class ReaderLocation extends Equatable {
   /// Compact token stored on bookmarks (`cfi_location`) so manual places
   /// survive independently of auto-resume fields on [Book].
   String toStableToken() => jsonEncode({
-        'v': 1,
-        'format': format.name,
-        'pageIndex': pageIndex,
-        'chapterId': chapterId,
-        'progress': progress,
-      });
+    'v': 1,
+    'format': format.name,
+    'pageIndex': pageIndex,
+    'chapterId': chapterId,
+    'progress': progress,
+  });
 
   factory ReaderLocation.fromStableToken(
     String? token, {
@@ -110,11 +109,11 @@ class ReaderLocation extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'format': format.name,
-        'pageIndex': pageIndex,
-        'chapterId': chapterId,
-        'progress': progress,
-      };
+    'format': format.name,
+    'pageIndex': pageIndex,
+    'chapterId': chapterId,
+    'progress': progress,
+  };
 
   factory ReaderLocation.fromBook(Book book) {
     return ReaderLocation(

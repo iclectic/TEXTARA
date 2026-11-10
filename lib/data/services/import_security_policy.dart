@@ -54,7 +54,7 @@ class ImportSecurityPolicy {
   final MobiImportService _mobiImport;
 
   ImportSecurityPolicy({MobiImportService? mobiImport})
-      : _mobiImport = mobiImport ?? MobiImportService();
+    : _mobiImport = mobiImport ?? MobiImportService();
 
   Future<ImportSecurityValidation> validateBookFile(String filePath) async {
     final file = File(filePath);

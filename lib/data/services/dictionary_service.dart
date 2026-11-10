@@ -15,9 +15,9 @@ class DictionaryService {
     http.Client? httpClient,
     AssetBundle? assetBundle,
     this.onlineEndpoint = AppConstants.dictionaryOnlineEndpoint,
-  })  : _cache = cache ?? DictionaryCache(),
-        _httpClient = httpClient ?? http.Client(),
-        _assetBundle = assetBundle ?? rootBundle;
+  }) : _cache = cache ?? DictionaryCache(),
+       _httpClient = httpClient ?? http.Client(),
+       _assetBundle = assetBundle ?? rootBundle;
 
   final DictionaryCache _cache;
   final http.Client _httpClient;

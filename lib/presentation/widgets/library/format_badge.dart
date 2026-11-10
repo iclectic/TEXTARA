@@ -6,11 +6,7 @@ class FormatBadge extends StatelessWidget {
   final BookFormat format;
   final bool compact;
 
-  const FormatBadge({
-    super.key,
-    required this.format,
-    this.compact = false,
-  });
+  const FormatBadge({super.key, required this.format, this.compact = false});
 
   factory FormatBadge.forBook(Book book, {bool compact = false}) {
     return FormatBadge(format: book.format, compact: compact);

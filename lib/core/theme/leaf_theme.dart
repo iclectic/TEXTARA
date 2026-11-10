@@ -5,7 +5,10 @@ import 'package:textara/domain/entities/app_theme.dart';
 class LeafTheme {
   LeafTheme._();
 
-  static ThemeData fromAppTheme(AppTheme appTheme, {bool reducedMotion = false}) {
+  static ThemeData fromAppTheme(
+    AppTheme appTheme, {
+    bool reducedMotion = false,
+  }) {
     final isDark = appTheme.brightness == Brightness.dark;
     final colorScheme = ColorScheme(
       brightness: appTheme.brightness,
@@ -74,21 +77,22 @@ class LeafTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: appTheme.accentColor, width: 2),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: appTheme.surfaceColor,
         selectedColor: appTheme.accentColor.withValues(alpha: 0.15),
         side: BorderSide(color: appTheme.dividerColor),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        labelStyle: GoogleFonts.inter(
-          fontSize: 13,
-          color: appTheme.textColor,
-        ),
+        labelStyle: GoogleFonts.inter(fontSize: 13, color: appTheme.textColor),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? const Color(0xFF333333) : const Color(0xFF1A1A2E),
+        backgroundColor: isDark
+            ? const Color(0xFF333333)
+            : const Color(0xFF1A1A2E),
         contentTextStyle: GoogleFonts.inter(color: Colors.white, fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,

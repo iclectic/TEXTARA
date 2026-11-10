@@ -14,14 +14,15 @@ class DictionarySense extends Equatable {
   });
 
   Map<String, dynamic> toJson() => {
-        'pos': partOfSpeech,
-        'definition': definition,
-        if (example != null) 'example': example,
-      };
+    'pos': partOfSpeech,
+    'definition': definition,
+    if (example != null) 'example': example,
+  };
 
   factory DictionarySense.fromJson(Map<String, dynamic> json) {
     return DictionarySense(
-      partOfSpeech: (json['pos'] as String?) ??
+      partOfSpeech:
+          (json['pos'] as String?) ??
           (json['partOfSpeech'] as String?) ??
           'unknown',
       definition: (json['definition'] as String?) ?? '',
@@ -59,10 +60,10 @@ class DictionaryEntry extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'senses': senses.map((s) => s.toJson()).toList(),
-        'source': source.name,
-      };
+    'word': word,
+    'senses': senses.map((s) => s.toJson()).toList(),
+    'source': source.name,
+  };
 
   factory DictionaryEntry.fromJson(Map<String, dynamic> json) {
     final rawSenses = json['senses'] as List<dynamic>? ?? const [];
@@ -106,13 +107,14 @@ class DictionaryLookupResult extends Equatable {
   });
 
   const DictionaryLookupResult.idle()
-      : query = '',
-        status = DictionaryLookupStatus.idle,
-        entry = null,
-        errorMessage = null,
-        usedNetwork = false;
+    : query = '',
+      status = DictionaryLookupStatus.idle,
+      entry = null,
+      errorMessage = null,
+      usedNetwork = false;
 
-  factory DictionaryLookupResult.loading(String query) => DictionaryLookupResult(
+  factory DictionaryLookupResult.loading(String query) =>
+      DictionaryLookupResult(
         query: query,
         status: DictionaryLookupStatus.loading,
       );
@@ -143,6 +145,5 @@ class DictionaryLookupResult extends Equatable {
       );
 
   @override
-  List<Object?> get props =>
-      [query, status, entry, errorMessage, usedNetwork];
+  List<Object?> get props => [query, status, entry, errorMessage, usedNetwork];
 }

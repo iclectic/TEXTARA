@@ -46,8 +46,7 @@ class FileStorageService {
     return destPath;
   }
 
-  Future<String> saveCoverImage(
-      List<int> imageBytes, String bookId) async {
+  Future<String> saveCoverImage(List<int> imageBytes, String bookId) async {
     final dir = await _coversDir;
     final destPath = p.join(dir.path, '$bookId.jpg');
     final file = File(destPath);
