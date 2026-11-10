@@ -24,7 +24,22 @@ class AppConstants {
   static const double maxMargin = 64.0;
   static const double defaultMargin = 24.0;
 
-  static const List<String> supportedExtensions = ['epub', 'pdf'];
+  static const List<String> supportedExtensions = [
+    'epub',
+    'pdf',
+    'txt',
+    'fb2',
+    'mobi',
+    'azw',
+    'azw3',
+  ];
+
+  /// Human-readable import formats for empty states and error copy.
+  static const String supportedFormatsLabel =
+      'EPUB, PDF, TXT, FB2, and DRM-free MOBI/AZW';
+
+  /// Soft per-file ceiling surfaced in UX (enforced in ImportSecurityPolicy).
+  static const int maxImportFileBytes = 500 * 1024 * 1024;
 
   static const String prefKeyFirstRun = 'first_run';
   static const String prefKeyTheme = 'theme_mode';

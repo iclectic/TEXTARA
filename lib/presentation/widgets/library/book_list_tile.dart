@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/presentation/widgets/library/format_badge.dart';
 
 class BookListTile extends StatelessWidget {
   final Book book;
@@ -122,28 +123,7 @@ class BookListTile extends StatelessWidget {
                               ),
                             ),
                           const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.05,
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              book.format.name.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                            ),
-                          ),
+                          FormatBadge.forBook(book),
                         ],
                       ),
                     ],
@@ -189,7 +169,7 @@ class BookListTile extends StatelessWidget {
     return Container(
       color: theme.colorScheme.primary.withValues(alpha: 0.15),
       child: Icon(
-        book.isEpub ? Icons.menu_book_rounded : Icons.picture_as_pdf_rounded,
+        formatIconFor(book.format),
         size: 20,
         color: theme.colorScheme.primary,
       ),

@@ -13,6 +13,7 @@ import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/reader/epub_reader_view.dart';
 import 'package:textara/presentation/screens/reader/pdf_reader_view.dart';
+import 'package:textara/presentation/screens/reader/text_reader_view.dart';
 import 'package:textara/presentation/widgets/reader/ink_canvas.dart';
 import 'package:textara/presentation/widgets/reader/ink_toolbar.dart';
 import 'package:textara/presentation/widgets/reader/reader_app_bar.dart';
@@ -255,6 +256,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _brightnessGestureActive = false;
   }
 
+  Widget _buildReaderContent() {
+    if (widget.book.isPdf) {
+      return PdfReaderView(
+        book: widget.book,
+        onPageChanged: _onPageChanged,
+      );
+    }
+    if (widget.book.isEpub) {
+      return EpubReaderView(
+        book: widget.book,
+        onPageChanged: _onPageChanged,
+      );
+    }
+    // TXT / FB2 / DRM-free MOBI share the chapter text reader.
+    return TextReaderView(
+      book: widget.book,
+      onPageChanged: _onPageChanged,
+    );
+  }
+
   Future<void> _confirmClearInk(InkStrokesNotifier notifier) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -305,15 +326,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             onTap: (_brightnessGestureActive || inkTool != InkTool.off)
                 ? null
                 : _toggleControls,
-            child: widget.book.isEpub
-                ? EpubReaderView(
-                    book: widget.book,
-                    onPageChanged: _onPageChanged,
-                  )
-                : PdfReaderView(
-                    book: widget.book,
-                    onPageChanged: _onPageChanged,
-                  ),
+            child: _buildReaderContent(),
           ),
 
           // Ink overlay — when tool is off, IgnorePointer lets scroll through.

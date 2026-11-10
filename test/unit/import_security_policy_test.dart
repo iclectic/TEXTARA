@@ -44,16 +44,43 @@ void main() {
       );
     });
 
-    test('rejects unsupported book extensions', () async {
+    test('accepts a plain TXT file', () async {
       final file = File(p.join(tempDir.path, 'sample.txt'));
-      await file.writeAsString('plain text');
+      await file.writeAsString('plain text for reading');
+
+      final result = await policy.validateBookFile(file.path);
+
+      expect(result.isValid, true);
+      expect(result.extension, 'txt');
+    });
+
+    test('accepts an FB2 xml document', () async {
+      final file = File(p.join(tempDir.path, 'sample.fb2'));
+      await file.writeAsString(
+        '<?xml version="1.0"?><FictionBook><body><p>Hi</p></body></FictionBook>',
+      );
+
+      final result = await policy.validateBookFile(file.path);
+
+      expect(result.isValid, true);
+      expect(result.extension, 'fb2');
+    });
+
+    test('rejects unsupported book extensions', () async {
+      final file = File(p.join(tempDir.path, 'sample.docx'));
+      await file.writeAsString('not supported');
 
       final result = await policy.validateBookFile(file.path);
 
       expect(result.isValid, false);
+      expect(result.errorMessage, contains('Unsupported file format'));
+      expect(result.errorMessage, contains('EPUB'));
+    });
+
+    test('size-limit message includes megabyte ceiling', () async {
       expect(
-        result.errorMessage,
-        'Unsupported file format. Textara supports EPUB and PDF files.',
+        ImportSecurityPolicy.maxBookFileBytes,
+        500 * 1024 * 1024,
       );
     });
 
