@@ -9,8 +9,7 @@ class LibraryEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final limitMb =
-        (AppConstants.maxImportFileBytes / (1024 * 1024)).round();
+    final limitMb = (AppConstants.maxImportFileBytes / (1024 * 1024)).round();
 
     return Center(
       child: Padding(

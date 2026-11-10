@@ -280,9 +280,7 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                           controller: widget.scrollController,
                           padding: const EdgeInsets.all(16),
                           children: [
-                            _ResumeHint(
-                              label: widget.autoResumeLabel,
-                            ),
+                            _ResumeHint(label: widget.autoResumeLabel),
                             const SizedBox(height: 12),
                             ...bookmarks.map(
                               (bookmark) => Padding(
@@ -529,7 +527,8 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
               child: const Text('Save'),
             ),
           ],
@@ -540,9 +539,9 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     if (renamed == null || renamed.isEmpty) return;
 
     HapticFeedback.selectionClick();
-    await ref.read(annotationDaoProvider).updateBookmark(
-          bookmark.copyWith(title: renamed),
-        );
+    await ref
+        .read(annotationDaoProvider)
+        .updateBookmark(bookmark.copyWith(title: renamed));
     ref.invalidate(bookBookmarksProvider(widget.bookId));
   }
 

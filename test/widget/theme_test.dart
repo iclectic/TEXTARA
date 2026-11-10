@@ -30,21 +30,22 @@ void main() {
     });
 
     test(
-        'theme names are: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Azure, Ember',
-        () {
-      final names = BuiltInThemes.all.map((t) => t.name).toList();
-      expect(names, [
-        'Porcelain',
-        'Parchment',
-        'Dusk',
-        'Midnight',
-        'Sage',
-        'Rosewood',
-        'Ocean',
-        'Azure',
-        'Ember',
-      ]);
-    });
+      'theme names are: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Azure, Ember',
+      () {
+        final names = BuiltInThemes.all.map((t) => t.name).toList();
+        expect(names, [
+          'Porcelain',
+          'Parchment',
+          'Dusk',
+          'Midnight',
+          'Sage',
+          'Rosewood',
+          'Ocean',
+          'Azure',
+          'Ember',
+        ]);
+      },
+    );
 
     test('azure is the soft blue reading theme', () {
       expect(BuiltInThemes.azure.id, 'azure');
@@ -86,19 +87,26 @@ void main() {
       for (final theme in BuiltInThemes.all) {
         final luminance = theme.backgroundColor.computeLuminance();
         if (theme.brightness == Brightness.dark) {
-          expect(luminance, lessThan(0.5),
-              reason: '${theme.name} should have dark background');
+          expect(
+            luminance,
+            lessThan(0.5),
+            reason: '${theme.name} should have dark background',
+          );
         } else {
-          expect(luminance, greaterThanOrEqualTo(0.3),
-              reason: '${theme.name} should have light background');
+          expect(
+            luminance,
+            greaterThanOrEqualTo(0.3),
+            reason: '${theme.name} should have light background',
+          );
         }
       }
     });
   });
 
   group('Theme switching in widget tree', () {
-    testWidgets('switching AppTheme updates scaffold background',
-        (WidgetTester tester) async {
+    testWidgets('switching AppTheme updates scaffold background', (
+      WidgetTester tester,
+    ) async {
       AppTheme currentTheme = BuiltInThemes.porcelain;
 
       await tester.pumpWidget(
@@ -148,8 +156,10 @@ void main() {
 
       final scaffoldContext = tester.element(find.byType(Scaffold));
       final resolvedTheme = Theme.of(scaffoldContext);
-      expect(resolvedTheme.scaffoldBackgroundColor,
-          BuiltInThemes.dusk.backgroundColor);
+      expect(
+        resolvedTheme.scaffoldBackgroundColor,
+        BuiltInThemes.dusk.backgroundColor,
+      );
     });
   });
 }

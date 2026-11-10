@@ -10,30 +10,30 @@ class InkStrokeDao {
   Future<Database> get _db => _dbHelper.database;
 
   Map<String, dynamic> _toMap(InkStroke stroke) => {
-        'id': stroke.id,
-        'book_id': stroke.bookId,
-        'location_key': stroke.locationKey,
-        'tool': stroke.tool.name,
-        'color_value': stroke.colorValue,
-        'base_width': stroke.baseWidth,
-        'points_json': stroke.encodePoints(),
-        'created_at': stroke.createdAt.toIso8601String(),
-      };
+    'id': stroke.id,
+    'book_id': stroke.bookId,
+    'location_key': stroke.locationKey,
+    'tool': stroke.tool.name,
+    'color_value': stroke.colorValue,
+    'base_width': stroke.baseWidth,
+    'points_json': stroke.encodePoints(),
+    'created_at': stroke.createdAt.toIso8601String(),
+  };
 
   InkStroke _fromMap(Map<String, dynamic> map) => InkStroke(
-        id: map['id'] as String,
-        bookId: map['book_id'] as String,
-        locationKey: map['location_key'] as String? ?? '',
-        tool: InkTool.values.firstWhere(
-          (e) => e.name == map['tool'],
-          orElse: () => InkTool.pen,
-        ),
-        colorValue: map['color_value'] as int? ?? 0xFF1A1A2E,
-        baseWidth: (map['base_width'] as num?)?.toDouble() ?? 2.5,
-        points: InkStroke.decodePoints(map['points_json'] as String? ?? '[]'),
-        createdAt: DateTime.tryParse(map['created_at'] as String? ?? '') ??
-            DateTime.now(),
-      );
+    id: map['id'] as String,
+    bookId: map['book_id'] as String,
+    locationKey: map['location_key'] as String? ?? '',
+    tool: InkTool.values.firstWhere(
+      (e) => e.name == map['tool'],
+      orElse: () => InkTool.pen,
+    ),
+    colorValue: map['color_value'] as int? ?? 0xFF1A1A2E,
+    baseWidth: (map['base_width'] as num?)?.toDouble() ?? 2.5,
+    points: InkStroke.decodePoints(map['points_json'] as String? ?? '[]'),
+    createdAt:
+        DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+  );
 
   Future<List<InkStroke>> getStrokesForLocation({
     required String bookId,

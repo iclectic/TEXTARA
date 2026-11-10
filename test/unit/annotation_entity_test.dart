@@ -126,10 +126,7 @@ void main() {
     });
 
     test('fromJson handles missing fields gracefully', () {
-      final json = <String, dynamic>{
-        'id': 'b-minimal',
-        'bookId': 'book-1',
-      };
+      final json = <String, dynamic>{'id': 'b-minimal', 'bookId': 'book-1'};
       final restored = Bookmark.fromJson(json);
       expect(restored.id, 'b-minimal');
       expect(restored.pageNumber, 0);

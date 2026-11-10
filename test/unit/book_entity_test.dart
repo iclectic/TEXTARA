@@ -61,7 +61,10 @@ void main() {
       expect(txt.formatBadgeLabel, 'TXT');
       expect(fb2.formatBadgeLabel, 'FB2');
       expect(mobi.formatBadgeLabel, 'MOBI');
-      expect(book.copyWith(format: BookFormat.pdf).usesChapterTextReader, isFalse);
+      expect(
+        book.copyWith(format: BookFormat.pdf).usesChapterTextReader,
+        isFalse,
+      );
     });
 
     test('copyWith preserves unchanged fields', () {

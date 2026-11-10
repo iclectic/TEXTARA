@@ -58,11 +58,7 @@ Uint8List _buildPalmDb({
   // Write records into buffer
   bytes.setRange(offsets[0], offsets[0] + rec0.length, rec0);
   for (var i = 1; i < recordCount; i++) {
-    bytes.setRange(
-      offsets[i],
-      offsets[i] + records[i].length,
-      records[i],
-    );
+    bytes.setRange(offsets[i], offsets[i] + records[i].length, records[i]);
   }
   // records[0] placeholder ignored; we wrote rec0
   return bytes;
@@ -75,10 +71,7 @@ void main() {
     final bytes = _buildPalmDb(
       encryption: 0,
       compression: 1,
-      records: [
-        Uint8List(16),
-        Uint8List.fromList('Hello from mobi'.codeUnits),
-      ],
+      records: [Uint8List(16), Uint8List.fromList('Hello from mobi'.codeUnits)],
     );
     expect(service.looksLikeMobi(bytes), isTrue);
     expect(service.hasDrm(bytes), isFalse);
@@ -88,10 +81,7 @@ void main() {
     final bytes = _buildPalmDb(
       encryption: 2,
       compression: 1,
-      records: [
-        Uint8List(16),
-        Uint8List.fromList('secret'.codeUnits),
-      ],
+      records: [Uint8List(16), Uint8List.fromList('secret'.codeUnits)],
     );
     expect(service.hasDrm(bytes), isTrue);
     expect(
@@ -110,10 +100,7 @@ void main() {
     final bytes = _buildPalmDb(
       encryption: 0,
       compression: 17480,
-      records: [
-        Uint8List(16),
-        Uint8List.fromList('x'.codeUnits),
-      ],
+      records: [Uint8List(16), Uint8List.fromList('x'.codeUnits)],
     );
     expect(
       () => service.convertBytes(bytes, fallbackTitle: 'KF8'),
@@ -133,7 +120,9 @@ void main() {
       compression: 1,
       records: [
         Uint8List(16),
-        Uint8List.fromList('<html><body><p>Hello MOBI</p></body></html>'.codeUnits),
+        Uint8List.fromList(
+          '<html><body><p>Hello MOBI</p></body></html>'.codeUnits,
+        ),
       ],
     );
     final book = service.convertBytes(bytes, fallbackTitle: 'Demo');

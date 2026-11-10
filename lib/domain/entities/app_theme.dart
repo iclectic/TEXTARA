@@ -175,21 +175,18 @@ class BuiltInThemes {
   );
 
   static List<AppTheme> get all => [
-        porcelain,
-        parchment,
-        dusk,
-        midnight,
-        sage,
-        rosewood,
-        ocean,
-        azure,
-        ember,
-      ];
+    porcelain,
+    parchment,
+    dusk,
+    midnight,
+    sage,
+    rosewood,
+    ocean,
+    azure,
+    ember,
+  ];
 
   static AppTheme findById(String id) {
-    return all.firstWhere(
-      (t) => t.id == id,
-      orElse: () => porcelain,
-    );
+    return all.firstWhere((t) => t.id == id, orElse: () => porcelain);
   }
 }

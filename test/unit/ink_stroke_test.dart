@@ -61,10 +61,7 @@ void main() {
         tool: InkTool.pen,
         colorValue: 0xFF000000,
         baseWidth: 2,
-        points: const [
-          InkPoint(x: 100, y: 100),
-          InkPoint(x: 120, y: 100),
-        ],
+        points: const [InkPoint(x: 100, y: 100), InkPoint(x: 120, y: 100)],
         createdAt: DateTime(2026, 1, 1),
       );
 
@@ -95,10 +92,7 @@ void main() {
       expect(epub.inkLocationKey, 'epub|2|Storm');
       expect(pdf.inkLocationKey, 'pdf|9|');
       // Progress must not affect ink key (typography/scroll independent).
-      expect(
-        epub.copyWith(progress: 0.9).inkLocationKey,
-        epub.inkLocationKey,
-      );
+      expect(epub.copyWith(progress: 0.9).inkLocationKey, epub.inkLocationKey);
     });
   });
 

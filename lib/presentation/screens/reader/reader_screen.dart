@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:textara/core/constants/app_constants.dart';
-import 'package:textara/data/services/brightness_service.dart';
-import 'package:textara/data/services/reading_progress_persister.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/ink_stroke.dart';
@@ -14,6 +12,7 @@ import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/reader/epub_reader_view.dart';
 import 'package:textara/presentation/screens/reader/pdf_reader_view.dart';
 import 'package:textara/presentation/screens/reader/text_reader_view.dart';
+import 'package:textara/presentation/view_models/reader_session_controller.dart';
 import 'package:textara/presentation/widgets/reader/ink_canvas.dart';
 import 'package:textara/presentation/widgets/reader/ink_toolbar.dart';
 import 'package:textara/presentation/widgets/reader/reader_app_bar.dart';
@@ -40,8 +39,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   bool _brightnessGestureActive = false;
   double? _brightnessHudValue;
   Timer? _brightnessHudTimer;
-  ReadingProgressPersister? _progressPersister;
-  BrightnessService? _brightnessService;
+  ReaderSessionController? _session;
   bool _readerDepsReady = false;
   double _gestureStartBrightness = AppConstants.defaultReaderBrightness;
   double _gestureStartDy = 0;
@@ -61,22 +59,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     super.didChangeDependencies();
     if (_readerDepsReady) return;
     _readerDepsReady = true;
-    _progressPersister = ReadingProgressPersister(ref.read(bookDaoProvider));
-    _brightnessService = ref.read(brightnessServiceProvider);
+    _session = ReaderSessionController(
+      book: widget.book,
+      books: ref.read(bookRepositoryProvider),
+      brightness: ref.read(brightnessServiceProvider),
+    );
     final brightness = ref.read(readerSettingsProvider).brightness;
-    unawaited(_brightnessService!.apply(brightness));
+    unawaited(_session!.applyBrightness(brightness));
+    unawaited(_session!.markOpened());
   }
 
   @override
   void dispose() {
     _brightnessHudTimer?.cancel();
-    // Best-effort flush so leaving the reader keeps the last page.
-    final persister = _progressPersister;
-    if (persister != null) {
-      unawaited(persister.flush());
-      persister.dispose();
+    final session = _session;
+    if (session != null) {
+      unawaited(session.dispose());
     }
-    unawaited(_brightnessService?.reset() ?? Future<void>.value());
     // Ensure next reader open starts with scroll-friendly ink-off.
     try {
       ref.read(inkToolProvider.notifier).state = InkTool.off;
@@ -99,11 +98,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _progress = total > 0 ? page / total : 0.0;
     });
 
-    _progressPersister?.schedule(
-      bookId: widget.book.id,
-      progress: _progress,
+    _session?.scheduleProgress(
       page: page,
-      chapterId: chapterTitle,
+      totalPages: total,
+      chapterTitle: chapterTitle,
     );
   }
 
@@ -116,14 +114,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         maxChildSize: 0.85,
         minChildSize: 0.3,
         expand: false,
-        builder: (_, controller) => ReaderSettingsSheet(
-          scrollController: controller,
-        ),
+        builder: (_, controller) =>
+            ReaderSettingsSheet(scrollController: controller),
       ),
     );
   }
 
   ReaderLocation _currentLocation() {
+    final session = _session;
+    if (session != null) {
+      return session.currentLocation(
+        pageIndex: _currentPage,
+        progress: _progress,
+        chapterTitle: _currentChapterTitle,
+      );
+    }
     return ReaderLocation(
       format: widget.book.format,
       pageIndex: _currentPage,
@@ -258,22 +263,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   Widget _buildReaderContent() {
     if (widget.book.isPdf) {
-      return PdfReaderView(
-        book: widget.book,
-        onPageChanged: _onPageChanged,
-      );
+      return PdfReaderView(book: widget.book, onPageChanged: _onPageChanged);
     }
     if (widget.book.isEpub) {
-      return EpubReaderView(
-        book: widget.book,
-        onPageChanged: _onPageChanged,
-      );
+      return EpubReaderView(book: widget.book, onPageChanged: _onPageChanged);
     }
     // TXT / FB2 / DRM-free MOBI share the chapter text reader.
-    return TextReaderView(
-      book: widget.book,
-      onPageChanged: _onPageChanged,
-    );
+    return TextReaderView(book: widget.book, onPageChanged: _onPageChanged);
   }
 
   Future<void> _confirmClearInk(InkStrokesNotifier notifier) async {
@@ -411,7 +407,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               child: ReaderAppBar(
                 title: widget.book.title,
                 onBack: () async {
-                  await _progressPersister?.flush();
+                  await _session?.flushProgress();
                   if (!context.mounted) return;
                   Navigator.of(context).pop();
                 },
@@ -432,8 +428,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   onToolChanged: (tool) {
                     ref.read(inkToolProvider.notifier).state = tool;
                   },
-                  onClearPage:
-                      strokes.isEmpty ? null : () => _confirmClearInk(inkNotifier),
+                  onClearPage: strokes.isEmpty
+                      ? null
+                      : () => _confirmClearInk(inkNotifier),
                 ),
               ),
             ),

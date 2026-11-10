@@ -12,50 +12,47 @@ void main() {
     setUp(() {
       bookDao = _MockBookDao();
       when(
-        () => bookDao.updateReadingProgress(
-          any(),
-          any(),
-          any(),
-          any(),
-        ),
+        () => bookDao.updateReadingProgress(any(), any(), any(), any()),
       ).thenAnswer((_) async {});
     });
 
-    test('coalesces rapid schedule calls into a single write after debounce',
-        () async {
-      final persister = ReadingProgressPersister(
-        bookDao,
-        debounce: const Duration(milliseconds: 40),
-      );
+    test(
+      'coalesces rapid schedule calls into a single write after debounce',
+      () async {
+        final persister = ReadingProgressPersister(
+          bookDao,
+          debounce: const Duration(milliseconds: 40),
+        );
 
-      persister.schedule(
-        bookId: 'book-1',
-        progress: 0.1,
-        page: 1,
-        chapterId: 'c1',
-      );
-      persister.schedule(
-        bookId: 'book-1',
-        progress: 0.2,
-        page: 2,
-        chapterId: 'c2',
-      );
-      persister.schedule(
-        bookId: 'book-1',
-        progress: 0.3,
-        page: 3,
-        chapterId: 'c3',
-      );
+        persister.schedule(
+          bookId: 'book-1',
+          progress: 0.1,
+          page: 1,
+          chapterId: 'c1',
+        );
+        persister.schedule(
+          bookId: 'book-1',
+          progress: 0.2,
+          page: 2,
+          chapterId: 'c2',
+        );
+        persister.schedule(
+          bookId: 'book-1',
+          progress: 0.3,
+          page: 3,
+          chapterId: 'c3',
+        );
 
-      await Future<void>.delayed(const Duration(milliseconds: 80));
+        await Future<void>.delayed(const Duration(milliseconds: 80));
 
-      verify(
-        () => bookDao.updateReadingProgress('book-1', 0.3, 3, 'c3'),
-      ).called(1);
-      verifyNoMoreInteractions(bookDao);
+        verify(
+          () => bookDao.updateReadingProgress('book-1', 0.3, 3, 'c3'),
+        ).called(1);
+        verifyNoMoreInteractions(bookDao);
 
-      persister.dispose();
-    });
+        persister.dispose();
+      },
+    );
 
     test('flush writes pending progress immediately', () async {
       final persister = ReadingProgressPersister(

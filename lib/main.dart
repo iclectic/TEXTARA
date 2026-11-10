@@ -81,9 +81,7 @@ class _TextaraAppState extends ConsumerState<TextaraApp> {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: LeafTheme.fromAppTheme(BuiltInThemes.porcelain),
-        home: const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
 

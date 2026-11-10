@@ -14,7 +14,7 @@ abstract class BrightnessService {
 
 class ScreenBrightnessService implements BrightnessService {
   ScreenBrightnessService({ScreenBrightness? plugin})
-      : _plugin = plugin ?? ScreenBrightness.instance;
+    : _plugin = plugin ?? ScreenBrightness.instance;
 
   final ScreenBrightness _plugin;
 

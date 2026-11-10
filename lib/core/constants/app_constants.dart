@@ -61,6 +61,13 @@ class AppConstants {
   /// Debounce window for persisting reading progress during rapid paging.
   static const Duration readingProgressDebounce = Duration(milliseconds: 500);
 
+  /// Soft memory budget for pdfrx page-image cache (large PDFs).
+  static const int pdfMaxImageBytesCachedOnMemory = 64 * 1024 * 1024;
+
+  /// Nearby-page cache extent ratios for PDF viewer (viewport multiples).
+  static const double pdfHorizontalCacheExtent = 0.75;
+  static const double pdfVerticalCacheExtent = 0.75;
+
   static const String dictionaryAssetPath = 'assets/dictionary/en_core.json';
   static const String dictionaryOnlineEndpoint =
       'https://api.dictionaryapi.dev/api/v2/entries/en/';

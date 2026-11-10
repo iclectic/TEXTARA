@@ -6,15 +6,16 @@ class ContinueReading {
   ContinueReading._();
 
   static Book? select(List<Book> books) {
-    final inProgress = books
-        .where(
-          (book) =>
-              book.lastOpenedAt != null &&
-              book.readingProgress > 0 &&
-              book.readingProgress < 1.0,
-        )
-        .toList()
-      ..sort((a, b) => b.lastOpenedAt!.compareTo(a.lastOpenedAt!));
+    final inProgress =
+        books
+            .where(
+              (book) =>
+                  book.lastOpenedAt != null &&
+                  book.readingProgress > 0 &&
+                  book.readingProgress < 1.0,
+            )
+            .toList()
+          ..sort((a, b) => b.lastOpenedAt!.compareTo(a.lastOpenedAt!));
     if (inProgress.isEmpty) return null;
     return inProgress.first;
   }

@@ -18,23 +18,15 @@ class InkPoint extends Equatable {
   /// 0.0–1.0 when the pointer reports pressure; otherwise 0.5.
   final double pressure;
 
-  const InkPoint({
-    required this.x,
-    required this.y,
-    this.pressure = 0.5,
-  });
+  const InkPoint({required this.x, required this.y, this.pressure = 0.5});
 
-  Map<String, dynamic> toJson() => {
-        'x': x,
-        'y': y,
-        'p': pressure,
-      };
+  Map<String, dynamic> toJson() => {'x': x, 'y': y, 'p': pressure};
 
   factory InkPoint.fromJson(Map<String, dynamic> json) => InkPoint(
-        x: (json['x'] as num?)?.toDouble() ?? 0,
-        y: (json['y'] as num?)?.toDouble() ?? 0,
-        pressure: ((json['p'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 1.0),
-      );
+    x: (json['x'] as num?)?.toDouble() ?? 0,
+    y: (json['y'] as num?)?.toDouble() ?? 0,
+    pressure: ((json['p'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 1.0),
+  );
 
   Offset get offset => Offset(x, y);
 
@@ -92,15 +84,15 @@ class InkStroke extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'bookId': bookId,
-        'locationKey': locationKey,
-        'tool': tool.name,
-        'colorValue': colorValue,
-        'baseWidth': baseWidth,
-        'points': points.map((p) => p.toJson()).toList(),
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'bookId': bookId,
+    'locationKey': locationKey,
+    'tool': tool.name,
+    'colorValue': colorValue,
+    'baseWidth': baseWidth,
+    'points': points.map((p) => p.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory InkStroke.fromJson(Map<String, dynamic> json) {
     final rawPoints = json['points'] as List<dynamic>? ?? const [];
@@ -122,7 +114,8 @@ class InkStroke extends Equatable {
             ),
           )
           .toList(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
     );
   }

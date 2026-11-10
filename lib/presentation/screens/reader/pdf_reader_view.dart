@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/reader_location.dart';
@@ -119,19 +120,23 @@ class _PdfReaderViewState extends ConsumerState<PdfReaderView> {
         enableTextSelection: true,
         pageDropShadow: null,
         backgroundColor: theme.scaffoldBackgroundColor,
+        // Harden large-PDF memory: keep rendering cache limited and tighten
+        // nearby-page image budgets (defaults are more aggressive).
+        limitRenderingCache: true,
+        maxImageBytesCachedOnMemory:
+            AppConstants.pdfMaxImageBytesCachedOnMemory,
+        horizontalCacheExtent: AppConstants.pdfHorizontalCacheExtent,
+        verticalCacheExtent: AppConstants.pdfVerticalCacheExtent,
         onPageChanged: (pageNumber) {
           if (pageNumber != null) {
-            widget.onPageChanged(
-              pageNumber,
-              _totalPages,
-              'Page $pageNumber',
-            );
+            widget.onPageChanged(pageNumber, _totalPages, 'Page $pageNumber');
           }
         },
         onViewerReady: (document, controller) {
           _totalPages = document.pages.length;
-          final resume = ReaderLocation.fromBook(widget.book)
-              .preservedAcrossTypographyChange();
+          final resume = ReaderLocation.fromBook(
+            widget.book,
+          ).preservedAcrossTypographyChange();
           final page = resume.pageIndex > 0 && resume.pageIndex <= _totalPages
               ? resume.pageIndex
               : 1;

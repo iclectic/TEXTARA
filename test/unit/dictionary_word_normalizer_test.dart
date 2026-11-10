@@ -22,7 +22,10 @@ void main() {
     });
 
     test('strips possessive and plural forms lightly', () {
-      expect(DictionaryWordNormalizer.headwordFromSelection("reader's"), 'reader');
+      expect(
+        DictionaryWordNormalizer.headwordFromSelection("reader's"),
+        'reader',
+      );
       expect(DictionaryWordNormalizer.headwordFromSelection('books'), 'book');
     });
 

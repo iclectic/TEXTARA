@@ -20,7 +20,9 @@ import 'package:textara/data/database/annotation_dao.dart';
 import 'package:textara/data/database/collection_dao.dart';
 import 'package:textara/data/database/idea_thread_dao.dart';
 import 'package:textara/data/database/ink_stroke_dao.dart';
+import 'package:textara/data/repositories/book_repository_impl.dart';
 import 'package:textara/data/services/brightness_service.dart';
+import 'package:textara/data/services/chapter_text_cache.dart';
 import 'package:textara/data/services/dictionary_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
@@ -31,6 +33,7 @@ import 'package:textara/data/services/mobi_import_service.dart';
 import 'package:textara/data/services/txt_parser_service.dart';
 import 'package:textara/domain/entities/dictionary_entry.dart';
 import 'package:textara/domain/entities/ink_stroke.dart';
+import 'package:textara/domain/repositories/book_repository.dart';
 
 // Database and DAOs
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
@@ -39,6 +42,15 @@ final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
 
 final bookDaoProvider = Provider<BookDao>((ref) {
   return BookDao(ref.watch(databaseHelperProvider));
+});
+
+final bookRepositoryProvider = Provider<BookRepository>((ref) {
+  return BookRepositoryImpl(ref.watch(bookDaoProvider));
+});
+
+/// Session-scoped LRU for parsed chapter text (EPUB/TXT/FB2/MOBI).
+final chapterTextCacheProvider = Provider<ChapterTextCache>((ref) {
+  return ChapterTextCache();
 });
 
 final annotationDaoProvider = Provider<AnnotationDao>((ref) {
@@ -62,11 +74,12 @@ final inkToolProvider = StateProvider<InkTool>((ref) => InkTool.off);
 
 /// Strokes for one book + [ReaderLocation.inkLocationKey].
 final inkStrokesProvider = StateNotifierProvider.autoDispose
-    .family<InkStrokesNotifier, AsyncValue<List<InkStroke>>, InkLocationArgs>(
-  (ref, args) {
-    return InkStrokesNotifier(ref.watch(inkStrokeDaoProvider), args);
-  },
-);
+    .family<InkStrokesNotifier, AsyncValue<List<InkStroke>>, InkLocationArgs>((
+      ref,
+      args,
+    ) {
+      return InkStrokesNotifier(ref.watch(inkStrokeDaoProvider), args);
+    });
 
 class InkLocationArgs extends Equatable {
   final String bookId;
@@ -80,7 +93,7 @@ class InkLocationArgs extends Equatable {
 
 class InkStrokesNotifier extends StateNotifier<AsyncValue<List<InkStroke>>> {
   InkStrokesNotifier(this._dao, this._args)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -179,17 +192,20 @@ final dictionaryServiceProvider = Provider<DictionaryService>((ref) {
 /// Opt-in online dictionary fallback. Off by default (privacy-first).
 final dictionaryOnlineFallbackProvider =
     StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
-  return BoolSettingNotifier(AppConstants.prefKeyDictionaryOnline);
-});
+      return BoolSettingNotifier(AppConstants.prefKeyDictionaryOnline);
+    });
 
-final dictionaryLookupProvider = StateNotifierProvider.autoDispose<
-    DictionaryLookupNotifier, DictionaryLookupResult>((ref) {
-  return DictionaryLookupNotifier(ref);
-});
+final dictionaryLookupProvider =
+    StateNotifierProvider.autoDispose<
+      DictionaryLookupNotifier,
+      DictionaryLookupResult
+    >((ref) {
+      return DictionaryLookupNotifier(ref);
+    });
 
 class DictionaryLookupNotifier extends StateNotifier<DictionaryLookupResult> {
   DictionaryLookupNotifier(this._ref)
-      : super(const DictionaryLookupResult.idle());
+    : super(const DictionaryLookupResult.idle());
 
   final Ref _ref;
 
@@ -202,10 +218,9 @@ class DictionaryLookupNotifier extends StateNotifier<DictionaryLookupResult> {
 
     state = DictionaryLookupResult.loading(query);
     final allowOnline = _ref.read(dictionaryOnlineFallbackProvider);
-    final result = await _ref.read(dictionaryServiceProvider).lookup(
-          query,
-          allowOnline: allowOnline,
-        );
+    final result = await _ref
+        .read(dictionaryServiceProvider)
+        .lookup(query, allowOnline: allowOnline);
     if (!mounted) return;
     state = result;
   }
@@ -343,20 +358,20 @@ final librarySearchQueryProvider = StateProvider<String>((ref) => '');
 // Books state
 final booksProvider =
     StateNotifierProvider<BooksNotifier, AsyncValue<List<Book>>>((ref) {
-      return BooksNotifier(ref.watch(bookDaoProvider));
+      return BooksNotifier(ref.watch(bookRepositoryProvider));
     });
 
 class BooksNotifier extends StateNotifier<AsyncValue<List<Book>>> {
-  final BookDao _bookDao;
+  final BookRepository _books;
 
-  BooksNotifier(this._bookDao) : super(const AsyncValue.loading()) {
+  BooksNotifier(this._books) : super(const AsyncValue.loading()) {
     loadBooks();
   }
 
   Future<void> loadBooks() async {
     try {
       state = const AsyncValue.loading();
-      final books = await _bookDao.getAllBooks();
+      final books = await _books.getAllBooks();
       state = AsyncValue.data(books);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -364,17 +379,17 @@ class BooksNotifier extends StateNotifier<AsyncValue<List<Book>>> {
   }
 
   Future<void> deleteBook(String bookId) async {
-    await _bookDao.deleteBook(bookId);
+    await _books.deleteBook(bookId);
     await loadBooks();
   }
 
   Future<void> toggleFavourite(String bookId) async {
-    await _bookDao.toggleFavourite(bookId);
+    await _books.toggleFavourite(bookId);
     await loadBooks();
   }
 
   Future<void> updateBook(Book book) async {
-    await _bookDao.updateBook(book);
+    await _books.updateBook(book);
     await loadBooks();
   }
 }
@@ -541,16 +556,12 @@ final bookBookmarksProvider = FutureProvider.family<List<Bookmark>, String>((
 });
 
 /// One-shot navigation request inside an open reader (bookmark jump, etc.).
-final pendingReaderJumpProvider =
-    StateProvider<ReaderLocation?>((ref) => null);
+final pendingReaderJumpProvider = StateProvider<ReaderLocation?>((ref) => null);
 
 /// Most recently opened in-progress book for the library "Continue reading" card.
 final continueReadingBookProvider = Provider<Book?>((ref) {
   final booksAsync = ref.watch(booksProvider);
-  return booksAsync.maybeWhen(
-    data: ContinueReading.select,
-    orElse: () => null,
-  );
+  return booksAsync.maybeWhen(data: ContinueReading.select, orElse: () => null);
 });
 
 // Collections

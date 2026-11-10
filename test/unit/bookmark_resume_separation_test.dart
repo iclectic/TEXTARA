@@ -36,39 +36,41 @@ void main() {
       persister.dispose();
     });
 
-    test('manual bookmark locations stay independent of later resume tokens',
-        () {
-      const bookmarked = ReaderLocation(
-        format: BookFormat.epub,
-        pageIndex: 2,
-        chapterId: 'Saved chapter',
-        progress: 0.2,
-      );
-      final bookmark = Bookmark(
-        id: 'bm-1',
-        bookId: 'book-1',
-        pageNumber: bookmarked.pageIndex,
-        chapterId: bookmarked.chapterId,
-        cfiLocation: bookmarked.toStableToken(),
-        title: 'Favourite',
-        createdAt: DateTime(2026, 1, 1),
-      );
+    test(
+      'manual bookmark locations stay independent of later resume tokens',
+      () {
+        const bookmarked = ReaderLocation(
+          format: BookFormat.epub,
+          pageIndex: 2,
+          chapterId: 'Saved chapter',
+          progress: 0.2,
+        );
+        final bookmark = Bookmark(
+          id: 'bm-1',
+          bookId: 'book-1',
+          pageNumber: bookmarked.pageIndex,
+          chapterId: bookmarked.chapterId,
+          cfiLocation: bookmarked.toStableToken(),
+          title: 'Favourite',
+          createdAt: DateTime(2026, 1, 1),
+        );
 
-      // Auto-resume later moves elsewhere.
-      const resume = ReaderLocation(
-        format: BookFormat.epub,
-        pageIndex: 9,
-        chapterId: 'Later chapter',
-        progress: 0.9,
-      );
+        // Auto-resume later moves elsewhere.
+        const resume = ReaderLocation(
+          format: BookFormat.epub,
+          pageIndex: 9,
+          chapterId: 'Later chapter',
+          progress: 0.9,
+        );
 
-      final restored = ReaderLocation.fromBookmark(
-        bookmark,
-        format: BookFormat.epub,
-      );
-      expect(restored.pageIndex, 2);
-      expect(restored.chapterId, 'Saved chapter');
-      expect(restored, isNot(equals(resume)));
-    });
+        final restored = ReaderLocation.fromBookmark(
+          bookmark,
+          format: BookFormat.epub,
+        );
+        expect(restored.pageIndex, 2);
+        expect(restored.chapterId, 'Saved chapter');
+        expect(restored, isNot(equals(resume)));
+      },
+    );
   });
 }

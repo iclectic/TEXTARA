@@ -3,6 +3,7 @@ enum BookFormat {
   pdf,
   txt,
   fb2,
+
   /// PalmDB Mobipocket / unprotected AZW family (DRM never decrypted).
   mobi,
 }
@@ -15,25 +16,9 @@ enum LibrarySortField { recentlyOpened, title, author, progress, lastAdded }
 
 enum SortOrder { ascending, descending }
 
-enum ReaderThemeMode {
-  light,
-  dark,
-  blue,
-  trueBlack,
-  sepia,
-  highContrast,
-}
+enum ReaderThemeMode { light, dark, blue, trueBlack, sepia, highContrast }
 
-enum HighlightColour {
-  yellow,
-  green,
-  blue,
-  pink,
-  orange,
-  purple,
-  red,
-  teal,
-}
+enum HighlightColour { yellow, green, blue, pink, orange, purple, red, teal }
 
 enum TextAlignment { left, right, centre, justify }
 
