@@ -35,6 +35,8 @@ class AppConstants {
   static const String prefKeyLowStimulation = 'low_stimulation';
   static const String prefKeyReaderDefaults = 'reader_defaults';
   static const String prefKeyReaderBrightness = 'reader_brightness';
+  static const String prefKeyDictionaryOnline = 'dictionary_online_fallback';
+  static const String prefKeyDictionaryCache = 'dictionary_lookup_cache';
 
   /// Application-scoped brightness when the user has not chosen a custom value.
   static const double defaultReaderBrightness = 1.0;
@@ -43,6 +45,11 @@ class AppConstants {
 
   /// Debounce window for persisting reading progress during rapid paging.
   static const Duration readingProgressDebounce = Duration(milliseconds: 500);
+
+  static const String dictionaryAssetPath = 'assets/dictionary/en_core.json';
+  static const String dictionaryOnlineEndpoint =
+      'https://api.dictionaryapi.dev/api/v2/entries/en/';
+  static const int dictionaryCacheMaxEntries = 200;
 
   static const String backupFileExtension = 'textara';
   static const String backupMimeType = 'application/json';

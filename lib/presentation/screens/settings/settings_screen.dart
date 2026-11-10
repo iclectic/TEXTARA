@@ -79,6 +79,20 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(height: 32),
 
+          _SectionHeader(title: 'Dictionary'),
+          SwitchListTile(
+            title: const Text('Online dictionary fallback'),
+            subtitle: const Text(
+              'Off by default. When on, unknown words may be looked up on the internet and cached on this device. Offline definitions stay preferred.',
+            ),
+            value: ref.watch(dictionaryOnlineFallbackProvider),
+            onChanged: (_) {
+              HapticFeedback.selectionClick();
+              ref.read(dictionaryOnlineFallbackProvider.notifier).toggle();
+            },
+          ),
+          const Divider(height: 32),
+
           _SectionHeader(title: 'Data'),
           ListTile(
             leading: const Icon(Icons.upload_rounded),
