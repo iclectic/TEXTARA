@@ -4,6 +4,9 @@ import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/data/database/book_dao.dart';
 
 /// Debounces SQLite writing of reading progress during rapid page changes.
+///
+/// Writes only to the `books` auto-resume fields via [BookDao.updateReadingProgress].
+/// Manual bookmarks live in the separate `bookmarks` table and are never modified here.
 class ReadingProgressPersister {
   ReadingProgressPersister(
     this._bookDao, {

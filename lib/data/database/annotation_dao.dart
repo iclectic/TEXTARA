@@ -114,6 +114,16 @@ class AnnotationDao {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<void> updateBookmark(Bookmark bookmark) async {
+    final db = await _db;
+    await db.update(
+      'bookmarks',
+      _bookmarkToMap(bookmark),
+      where: 'id = ?',
+      whereArgs: [bookmark.id],
+    );
+  }
+
   Future<void> deleteBookmark(String id) async {
     final db = await _db;
     await db.delete('bookmarks', where: 'id = ?', whereArgs: [id]);

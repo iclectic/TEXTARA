@@ -5,6 +5,7 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/widgets/reader/dictionary_sheet.dart';
@@ -73,11 +74,12 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
         _isLoading = false;
       });
 
-      // Restore position
-      if (widget.book.currentPage > 0 &&
-          widget.book.currentPage < _chapters.length) {
-        _pageController.jumpToPage(widget.book.currentPage);
-        _currentChapterIndex = widget.book.currentPage;
+      // Restore auto-resume position (chapter index is typography-stable).
+      final resume = ReaderLocation.fromBook(widget.book)
+          .preservedAcrossTypographyChange();
+      if (resume.pageIndex > 0 && resume.pageIndex < _chapters.length) {
+        _pageController.jumpToPage(resume.pageIndex);
+        _currentChapterIndex = resume.pageIndex;
       }
 
       _reportProgress();
@@ -97,6 +99,17 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
         ? _chapters[_currentChapterIndex].title
         : '';
     widget.onPageChanged(_currentChapterIndex, _chapters.length, title);
+  }
+
+  void _handlePendingJump(ReaderLocation? location) {
+    if (location == null || _chapters.isEmpty) return;
+    if (location.format != BookFormat.epub) return;
+    final target = location.pageIndex.clamp(0, _chapters.length - 1);
+    if (!_pageController.hasClients) return;
+    _pageController.jumpToPage(target);
+    setState(() => _currentChapterIndex = target);
+    _reportProgress();
+    ref.read(pendingReaderJumpProvider.notifier).state = null;
   }
 
   TextStyle _getReaderTextStyle() {
@@ -182,6 +195,9 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = ref.watch(readerSettingsProvider);
+    ref.listen<ReaderLocation?>(pendingReaderJumpProvider, (previous, next) {
+      _handlePendingJump(next);
+    });
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());

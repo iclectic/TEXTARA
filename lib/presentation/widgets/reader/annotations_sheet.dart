@@ -9,12 +9,16 @@ class AnnotationsSheet extends ConsumerStatefulWidget {
   final String bookId;
   final String bookTitle;
   final ScrollController scrollController;
+  final ValueChanged<Bookmark>? onBookmarkJump;
+  final String? autoResumeLabel;
 
   const AnnotationsSheet({
     super.key,
     required this.bookId,
     required this.bookTitle,
     required this.scrollController,
+    this.onBookmarkJump,
+    this.autoResumeLabel,
   });
 
   @override
@@ -264,22 +268,29 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                     'Could not load highlights.',
                   ),
                 ),
-                // Bookmarks tab
+                // Bookmarks tab — manual places, never overwritten by auto-resume.
                 bookmarksAsync.when(
                   data: (bookmarks) => bookmarks.isEmpty
                       ? _buildEmptyState(
                           theme,
                           'No bookmarks yet',
-                          'Tap the bookmark icon to save your place.',
+                          'Tap the bookmark icon while reading to save a place. Automatic resume is separate and keeps your last page without creating bookmarks.',
                         )
-                      : ListView.separated(
+                      : ListView(
                           controller: widget.scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: bookmarks.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) =>
-                              _buildBookmarkTile(bookmarks[index], theme),
+                          children: [
+                            _ResumeHint(
+                              label: widget.autoResumeLabel,
+                            ),
+                            const SizedBox(height: 12),
+                            ...bookmarks.map(
+                              (bookmark) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _buildBookmarkTile(bookmark, theme),
+                              ),
+                            ),
+                          ],
                         ),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
@@ -422,11 +433,59 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     );
   }
 
+  Future<void> _renameBookmark(Bookmark bookmark) async {
+    final controller = TextEditingController(
+      text: bookmark.title ?? 'Page ${bookmark.pageNumber}',
+    );
+    final renamed = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Rename bookmark'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Name',
+              hintText: 'e.g. Favourite passage',
+            ),
+            textCapitalization: TextCapitalization.sentences,
+            onSubmitted: (value) => Navigator.of(context).pop(value.trim()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    if (renamed == null || renamed.isEmpty) return;
+
+    HapticFeedback.selectionClick();
+    await ref.read(annotationDaoProvider).updateBookmark(
+          bookmark.copyWith(title: renamed),
+        );
+    ref.invalidate(bookBookmarksProvider(widget.bookId));
+  }
+
   Widget _buildBookmarkTile(Bookmark bookmark, ThemeData theme) {
     return Card(
       margin: EdgeInsets.zero,
       child: ListTile(
         dense: true,
+        onTap: widget.onBookmarkJump == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                widget.onBookmarkJump!(bookmark);
+              },
         leading: Icon(
           Icons.bookmark_rounded,
           color: theme.colorScheme.primary,
@@ -439,23 +498,72 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
           ),
         ),
         subtitle: Text(
-          bookmark.createdAt.toLocal().toString().split('.').first,
+          [
+            if (bookmark.chapterId != null && bookmark.chapterId!.isNotEmpty)
+              bookmark.chapterId!,
+            bookmark.createdAt.toLocal().toString().split('.').first,
+          ].join(' · '),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             fontSize: 11,
           ),
         ),
-        trailing: InkWell(
-          onTap: () async {
-            HapticFeedback.lightImpact();
-            await ref.read(annotationDaoProvider).deleteBookmark(bookmark.id);
-            ref.invalidate(bookBookmarksProvider(widget.bookId));
-          },
-          child: Icon(
-            Icons.close_rounded,
-            size: 18,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Rename bookmark',
+              icon: Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+              onPressed: () => _renameBookmark(bookmark),
+            ),
+            IconButton(
+              tooltip: 'Delete bookmark',
+              icon: Icon(
+                Icons.delete_outline_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+              onPressed: () async {
+                HapticFeedback.lightImpact();
+                await ref
+                    .read(annotationDaoProvider)
+                    .deleteBookmark(bookmark.id);
+                ref.invalidate(bookBookmarksProvider(widget.bookId));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResumeHint extends StatelessWidget {
+  final String? label;
+
+  const _ResumeHint({this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label == null || label!.isEmpty
+            ? 'Manual bookmarks stay put. Automatic resume only updates your last-read position.'
+            : 'Automatic resume: $label. Manual bookmarks below are never overwritten by resume.',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          height: 1.35,
         ),
       ),
     );

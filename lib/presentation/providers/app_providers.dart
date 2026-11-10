@@ -9,6 +9,8 @@ import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/collection.dart';
+import 'package:textara/domain/entities/continue_reading.dart';
+import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
 import 'package:textara/domain/entities/idea_thread.dart';
 import 'package:textara/data/database/database_helper.dart';
@@ -442,6 +444,19 @@ final bookBookmarksProvider = FutureProvider.family<List<Bookmark>, String>((
 ) async {
   final dao = ref.watch(annotationDaoProvider);
   return dao.getBookmarksForBook(bookId);
+});
+
+/// One-shot navigation request inside an open reader (bookmark jump, etc.).
+final pendingReaderJumpProvider =
+    StateProvider<ReaderLocation?>((ref) => null);
+
+/// Most recently opened in-progress book for the library "Continue reading" card.
+final continueReadingBookProvider = Provider<Book?>((ref) {
+  final booksAsync = ref.watch(booksProvider);
+  return booksAsync.maybeWhen(
+    data: ContinueReading.select,
+    orElse: () => null,
+  );
 });
 
 // Collections
