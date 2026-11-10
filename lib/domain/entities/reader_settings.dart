@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/constants/enums.dart';
 
 class ReaderSettings extends Equatable {
@@ -13,6 +14,10 @@ class ReaderSettings extends Equatable {
   final ReaderThemeMode themeMode;
   final String? customThemeId;
 
+  /// Application-scoped screen brightness in the range
+  /// [AppConstants.minReaderBrightness]–[AppConstants.maxReaderBrightness].
+  final double brightness;
+
   const ReaderSettings({
     this.fontFamily = 'Literata',
     this.fontSize = 16.0,
@@ -24,6 +29,7 @@ class ReaderSettings extends Equatable {
     this.hyphenationEnabled = false,
     this.themeMode = ReaderThemeMode.light,
     this.customThemeId,
+    this.brightness = AppConstants.defaultReaderBrightness,
   });
 
   ReaderSettings copyWith({
@@ -37,6 +43,7 @@ class ReaderSettings extends Equatable {
     bool? hyphenationEnabled,
     ReaderThemeMode? themeMode,
     String? customThemeId,
+    double? brightness,
   }) {
     return ReaderSettings(
       fontFamily: fontFamily ?? this.fontFamily,
@@ -49,6 +56,7 @@ class ReaderSettings extends Equatable {
       hyphenationEnabled: hyphenationEnabled ?? this.hyphenationEnabled,
       themeMode: themeMode ?? this.themeMode,
       customThemeId: customThemeId ?? this.customThemeId,
+      brightness: brightness ?? this.brightness,
     );
   }
 
@@ -63,6 +71,7 @@ class ReaderSettings extends Equatable {
         'hyphenationEnabled': hyphenationEnabled,
         'themeMode': themeMode.name,
         'customThemeId': customThemeId,
+        'brightness': brightness,
       };
 
   factory ReaderSettings.fromJson(Map<String, dynamic> json) => ReaderSettings(
@@ -84,7 +93,21 @@ class ReaderSettings extends Equatable {
           orElse: () => ReaderThemeMode.light,
         ),
         customThemeId: json['customThemeId'] as String?,
+        brightness: _clampBrightness(
+          (json['brightness'] as num?)?.toDouble() ??
+              AppConstants.defaultReaderBrightness,
+        ),
       );
+
+  static double _clampBrightness(double value) {
+    if (value < AppConstants.minReaderBrightness) {
+      return AppConstants.minReaderBrightness;
+    }
+    if (value > AppConstants.maxReaderBrightness) {
+      return AppConstants.maxReaderBrightness;
+    }
+    return value;
+  }
 
   @override
   List<Object?> get props => [
@@ -98,5 +121,6 @@ class ReaderSettings extends Equatable {
         hyphenationEnabled,
         themeMode,
         customThemeId,
+        brightness,
       ];
 }

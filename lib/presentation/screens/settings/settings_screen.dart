@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/core/theme/reading_theme_mapper.dart';
 import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 
@@ -27,7 +28,12 @@ class SettingsScreen extends ConsumerWidget {
             currentTheme: currentTheme,
             onChanged: (t) {
               HapticFeedback.selectionClick();
-              ref.read(currentThemeProvider.notifier).setTheme(t);
+              final mode = ReadingThemeMapper.modeForAppTheme(t);
+              if (mode != null) {
+                ref.read(readerSettingsProvider.notifier).setThemeMode(mode);
+              } else {
+                ref.read(currentThemeProvider.notifier).setTheme(t);
+              }
             },
           ),
           const Divider(height: 32),

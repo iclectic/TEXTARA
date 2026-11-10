@@ -4,13 +4,13 @@ import 'package:textara/domain/entities/app_theme.dart';
 
 void main() {
   group('BuiltInThemes', () {
-    test('contains exactly 8 themes', () {
-      expect(BuiltInThemes.all.length, 8);
+    test('contains exactly 9 themes', () {
+      expect(BuiltInThemes.all.length, 9);
     });
 
     test('all themes have unique ids', () {
       final ids = BuiltInThemes.all.map((t) => t.id).toSet();
-      expect(ids.length, 8);
+      expect(ids.length, 9);
     });
 
     test('all themes have non-empty names', () {
@@ -29,7 +29,8 @@ void main() {
       expect(BuiltInThemes.findById('nonexistent').id, 'porcelain');
     });
 
-    test('theme names are: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Ember',
+    test(
+        'theme names are: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Azure, Ember',
         () {
       final names = BuiltInThemes.all.map((t) => t.name).toList();
       expect(names, [
@@ -40,8 +41,18 @@ void main() {
         'Sage',
         'Rosewood',
         'Ocean',
+        'Azure',
         'Ember',
       ]);
+    });
+
+    test('azure is the soft blue reading theme', () {
+      expect(BuiltInThemes.azure.id, 'azure');
+      expect(BuiltInThemes.azure.brightness, Brightness.light);
+      expect(
+        BuiltInThemes.azure.backgroundColor.computeLuminance(),
+        greaterThan(0.3),
+      );
     });
 
     test('porcelain is a light theme', () {

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
 
@@ -14,6 +15,7 @@ void main() {
       expect(settings.textAlignment, TextAlignment.left);
       expect(settings.hyphenationEnabled, false);
       expect(settings.themeMode, ReaderThemeMode.light);
+      expect(settings.brightness, AppConstants.defaultReaderBrightness);
     });
 
     test('copyWith updates specified fields only', () {
@@ -21,11 +23,15 @@ void main() {
       final updated = settings.copyWith(
         fontSize: 20.0,
         lineHeight: 2.0,
+        brightness: 0.4,
+        themeMode: ReaderThemeMode.blue,
       );
       expect(updated.fontSize, 20.0);
       expect(updated.lineHeight, 2.0);
       expect(updated.fontFamily, 'Literata');
       expect(updated.horizontalMargin, 24.0);
+      expect(updated.brightness, 0.4);
+      expect(updated.themeMode, ReaderThemeMode.blue);
     });
 
     test('toJson produces valid JSON map', () {
@@ -37,6 +43,7 @@ void main() {
       expect(json['textAlignment'], 'left');
       expect(json['hyphenationEnabled'], false);
       expect(json['themeMode'], 'light');
+      expect(json['brightness'], AppConstants.defaultReaderBrightness);
     });
 
     test('fromJson round-trips correctly', () {
@@ -48,7 +55,8 @@ void main() {
         horizontalMargin: 32.0,
         textAlignment: TextAlignment.justify,
         hyphenationEnabled: true,
-        themeMode: ReaderThemeMode.sepia,
+        themeMode: ReaderThemeMode.blue,
+        brightness: 0.55,
       );
       final json = original.toJson();
       final restored = ReaderSettings.fromJson(json);
@@ -59,7 +67,8 @@ void main() {
       expect(restored.horizontalMargin, 32.0);
       expect(restored.textAlignment, TextAlignment.justify);
       expect(restored.hyphenationEnabled, true);
-      expect(restored.themeMode, ReaderThemeMode.sepia);
+      expect(restored.themeMode, ReaderThemeMode.blue);
+      expect(restored.brightness, 0.55);
     });
 
     test('fromJson handles missing fields gracefully', () {
@@ -68,6 +77,7 @@ void main() {
       expect(restored.fontSize, 16.0);
       expect(restored.lineHeight, 1.6);
       expect(restored.textAlignment, TextAlignment.left);
+      expect(restored.brightness, AppConstants.defaultReaderBrightness);
     });
 
     test('fromJson handles invalid enum values gracefully', () {
@@ -80,6 +90,19 @@ void main() {
       expect(restored.themeMode, ReaderThemeMode.light);
     });
 
+    test('fromJson clamps out-of-range brightness', () {
+      final tooLow = ReaderSettings.fromJson({'brightness': 0.0});
+      expect(tooLow.brightness, AppConstants.minReaderBrightness);
+
+      final tooHigh = ReaderSettings.fromJson({'brightness': 2.0});
+      expect(tooHigh.brightness, AppConstants.maxReaderBrightness);
+    });
+
+    test('legacy sepia themeMode still deserializes', () {
+      final restored = ReaderSettings.fromJson({'themeMode': 'sepia'});
+      expect(restored.themeMode, ReaderThemeMode.sepia);
+    });
+
     test('equatable compares all fields', () {
       const a = ReaderSettings();
       const b = ReaderSettings();
@@ -87,6 +110,9 @@ void main() {
 
       final c = a.copyWith(fontSize: 20.0);
       expect(a, isNot(equals(c)));
+
+      final d = a.copyWith(brightness: 0.3);
+      expect(a, isNot(equals(d)));
     });
   });
 }

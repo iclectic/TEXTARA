@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/core/theme/reading_theme_mapper.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 
 class ReaderSettingsSheet extends ConsumerWidget {
@@ -55,6 +56,50 @@ class ReaderSettingsSheet extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
+
+          Text('Reading mode', style: theme.textTheme.labelLarge),
+          const SizedBox(height: 8),
+          Semantics(
+            label: 'Reading mode',
+            child: SegmentedButton<ReaderThemeMode>(
+              segments: [
+                for (final mode in ReadingThemeMapper.primaryModes)
+                  ButtonSegment<ReaderThemeMode>(
+                    value: mode,
+                    label: Text(ReadingThemeMapper.labelFor(mode)),
+                    tooltip: ReadingThemeMapper.labelFor(mode),
+                  ),
+              ],
+              selected: {
+                ReadingThemeMapper.primaryModes.contains(settings.themeMode)
+                    ? settings.themeMode
+                    : ReaderThemeMode.light,
+              },
+              onSelectionChanged: (set) {
+                HapticFeedback.selectionClick();
+                notifier.setThemeMode(set.first);
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          _SliderRow(
+            label: 'Brightness',
+            value: settings.brightness,
+            min: AppConstants.minReaderBrightness,
+            max: AppConstants.maxReaderBrightness,
+            displayValue: '${(settings.brightness * 100).round()}%',
+            semanticLabel: 'Screen brightness',
+            onChanged: (v) => notifier.setBrightness(v),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tip: drag the right edge of the page to adjust brightness while reading.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 20),
 
           // Font family
           Text('Font', style: theme.textTheme.labelLarge),
@@ -168,6 +213,7 @@ class _SliderRow extends StatelessWidget {
   final double max;
   final String displayValue;
   final ValueChanged<double> onChanged;
+  final String? semanticLabel;
 
   const _SliderRow({
     required this.label,
@@ -176,30 +222,36 @@ class _SliderRow extends StatelessWidget {
     required this.max,
     required this.displayValue,
     required this.onChanged,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: theme.textTheme.labelLarge),
-            Text(
-              displayValue,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
+    return Semantics(
+      label: semanticLabel ?? label,
+      slider: true,
+      value: displayValue,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: theme.textTheme.labelLarge),
+              Text(
+                displayValue,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
-        ),
-        Slider(value: value, min: min, max: max, onChanged: onChanged),
-      ],
+            ],
+          ),
+          Slider(value: value, min: min, max: max, onChanged: onChanged),
+        ],
+      ),
     );
   }
 }
