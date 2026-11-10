@@ -51,6 +51,7 @@ dependencies:
 
   # Export
   pdf: ^3.11.2
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
@@ -63,3 +64,4 @@ flutter:
   assets:
     - assets/
     - assets/sample/
+    - assets/dictionary/en_core.json

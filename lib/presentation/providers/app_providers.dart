@@ -17,10 +17,12 @@ import 'package:textara/data/database/annotation_dao.dart';
 import 'package:textara/data/database/collection_dao.dart';
 import 'package:textara/data/database/idea_thread_dao.dart';
 import 'package:textara/data/services/brightness_service.dart';
+import 'package:textara/data/services/dictionary_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
 import 'package:textara/data/services/import_service.dart';
 import 'package:textara/data/services/export_service.dart';
+import 'package:textara/domain/entities/dictionary_entry.dart';
 
 // Database and DAOs
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
@@ -73,6 +75,49 @@ final exportServiceProvider = Provider<ExportService>((ref) {
 final brightnessServiceProvider = Provider<BrightnessService>((ref) {
   return ScreenBrightnessService();
 });
+
+final dictionaryServiceProvider = Provider<DictionaryService>((ref) {
+  return DictionaryService();
+});
+
+/// Opt-in online dictionary fallback. Off by default (privacy-first).
+final dictionaryOnlineFallbackProvider =
+    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
+  return BoolSettingNotifier(AppConstants.prefKeyDictionaryOnline);
+});
+
+final dictionaryLookupProvider = StateNotifierProvider.autoDispose<
+    DictionaryLookupNotifier, DictionaryLookupResult>((ref) {
+  return DictionaryLookupNotifier(ref);
+});
+
+class DictionaryLookupNotifier extends StateNotifier<DictionaryLookupResult> {
+  DictionaryLookupNotifier(this._ref)
+      : super(const DictionaryLookupResult.idle());
+
+  final Ref _ref;
+
+  Future<void> lookup(String selection) async {
+    final query = selection.trim();
+    if (query.isEmpty) {
+      state = const DictionaryLookupResult.idle();
+      return;
+    }
+
+    state = DictionaryLookupResult.loading(query);
+    final allowOnline = _ref.read(dictionaryOnlineFallbackProvider);
+    final result = await _ref.read(dictionaryServiceProvider).lookup(
+          query,
+          allowOnline: allowOnline,
+        );
+    if (!mounted) return;
+    state = result;
+  }
+
+  void reset() {
+    state = const DictionaryLookupResult.idle();
+  }
+}
 
 // App preferences
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((

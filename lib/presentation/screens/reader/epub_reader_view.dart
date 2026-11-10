@@ -7,6 +7,7 @@ import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
+import 'package:textara/presentation/widgets/reader/dictionary_sheet.dart';
 
 class EpubReaderView extends ConsumerStatefulWidget {
   final Book book;
@@ -294,7 +295,17 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
               final selection = value.selection;
               final selectedText = selection.textInside(value.text);
               final buttonItems = <ContextMenuButtonItem>[
-                if (selectedText.trim().isNotEmpty)
+                if (selectedText.trim().isNotEmpty) ...[
+                  ContextMenuButtonItem(
+                    label: 'Look up',
+                    onPressed: () {
+                      editableTextState.hideToolbar();
+                      showDictionarySheet(
+                        context,
+                        selection: selectedText,
+                      );
+                    },
+                  ),
                   ContextMenuButtonItem(
                     label: 'Highlight',
                     onPressed: () {
@@ -307,6 +318,7 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
                       );
                     },
                   ),
+                ],
                 ...editableTextState.contextMenuButtonItems,
               ];
               return AdaptiveTextSelectionToolbar.buttonItems(
