@@ -11,6 +11,7 @@ enum SortOrder { ascending, descending }
 enum ReaderThemeMode {
   light,
   dark,
+  blue,
   trueBlack,
   sepia,
   highContrast,

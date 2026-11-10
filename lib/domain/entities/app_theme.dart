@@ -149,6 +149,19 @@ class BuiltInThemes {
     brightness: Brightness.light,
   );
 
+  /// Soft blue “in-between” reading mode — cooler than parchment, gentler than dusk.
+  static const AppTheme azure = AppTheme(
+    id: 'azure',
+    name: 'Azure',
+    backgroundColor: Color(0xFFD9E6F2),
+    textColor: Color(0xFF1A2B3C),
+    accentColor: Color(0xFF2F6FED),
+    surfaceColor: Color(0xFFE8F0F8),
+    cardColor: Color(0xFFE8F0F8),
+    dividerColor: Color(0xFFB7C9DB),
+    brightness: Brightness.light,
+  );
+
   static const AppTheme ember = AppTheme(
     id: 'ember',
     name: 'Ember',
@@ -169,6 +182,7 @@ class BuiltInThemes {
         sage,
         rosewood,
         ocean,
+        azure,
         ember,
       ];
 

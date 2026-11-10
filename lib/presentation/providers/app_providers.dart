@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/core/theme/reading_theme_mapper.dart';
 import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
@@ -13,6 +16,7 @@ import 'package:textara/data/database/book_dao.dart';
 import 'package:textara/data/database/annotation_dao.dart';
 import 'package:textara/data/database/collection_dao.dart';
 import 'package:textara/data/database/idea_thread_dao.dart';
+import 'package:textara/data/services/brightness_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
 import 'package:textara/data/services/import_service.dart';
@@ -64,6 +68,10 @@ final exportServiceProvider = Provider<ExportService>((ref) {
     ref.watch(ideaThreadDaoProvider),
     ref.watch(fileStorageProvider),
   );
+});
+
+final brightnessServiceProvider = Provider<BrightnessService>((ref) {
+  return ScreenBrightnessService();
 });
 
 // App preferences
@@ -279,38 +287,98 @@ final filteredBooksProvider = Provider<List<Book>>((ref) {
 // Reader settings
 final readerSettingsProvider =
     StateNotifierProvider<ReaderSettingsNotifier, ReaderSettings>((ref) {
-      return ReaderSettingsNotifier();
+      return ReaderSettingsNotifier(ref);
     });
 
 class ReaderSettingsNotifier extends StateNotifier<ReaderSettings> {
-  ReaderSettingsNotifier() : super(const ReaderSettings());
+  ReaderSettingsNotifier(this._ref) : super(const ReaderSettings());
 
-  void update(ReaderSettings settings) {
-    state = settings;
+  final Ref _ref;
+  bool _loaded = false;
+
+  Future<void> loadSavedSettings() async {
+    if (_loaded) return;
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(AppConstants.prefKeyReaderDefaults);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          state = ReaderSettings.fromJson(decoded);
+        } else if (decoded is Map) {
+          state = ReaderSettings.fromJson(
+            decoded.map((key, value) => MapEntry(key.toString(), value)),
+          );
+        }
+      } catch (_) {
+        // Keep defaults if stored JSON is corrupt.
+      }
+    }
+    _loaded = true;
+    await _applyBrightness(state.brightness);
   }
 
-  void setFontFamily(String fontFamily) {
-    state = state.copyWith(fontFamily: fontFamily);
+  Future<void> _persist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      AppConstants.prefKeyReaderDefaults,
+      jsonEncode(state.toJson()),
+    );
   }
 
-  void setFontSize(double fontSize) {
-    state = state.copyWith(fontSize: fontSize);
+  Future<void> _applyBrightness(double brightness) async {
+    await _ref.read(brightnessServiceProvider).apply(brightness);
   }
 
-  void setLineHeight(double lineHeight) {
-    state = state.copyWith(lineHeight: lineHeight);
+  Future<void> _commit(ReaderSettings next) async {
+    state = next;
+    await _persist();
   }
 
-  void setMargin(double margin) {
-    state = state.copyWith(horizontalMargin: margin);
+  Future<void> update(ReaderSettings settings) async {
+    await _commit(settings);
+    await _applyBrightness(settings.brightness);
   }
 
-  void setAlignment(TextAlignment alignment) {
-    state = state.copyWith(textAlignment: alignment);
+  Future<void> setFontFamily(String fontFamily) async {
+    await _commit(state.copyWith(fontFamily: fontFamily));
   }
 
-  void toggleHyphenation() {
-    state = state.copyWith(hyphenationEnabled: !state.hyphenationEnabled);
+  Future<void> setFontSize(double fontSize) async {
+    await _commit(state.copyWith(fontSize: fontSize));
+  }
+
+  Future<void> setLineHeight(double lineHeight) async {
+    await _commit(state.copyWith(lineHeight: lineHeight));
+  }
+
+  Future<void> setMargin(double margin) async {
+    await _commit(state.copyWith(horizontalMargin: margin));
+  }
+
+  Future<void> setAlignment(TextAlignment alignment) async {
+    await _commit(state.copyWith(textAlignment: alignment));
+  }
+
+  Future<void> toggleHyphenation() async {
+    await _commit(
+      state.copyWith(hyphenationEnabled: !state.hyphenationEnabled),
+    );
+  }
+
+  Future<void> setThemeMode(ReaderThemeMode mode) async {
+    await _commit(state.copyWith(themeMode: mode));
+    final theme = ReadingThemeMapper.appThemeFor(mode);
+    _ref.read(currentThemeProvider.notifier).setTheme(theme);
+  }
+
+  Future<void> setBrightness(double brightness) async {
+    final clamped = brightness.clamp(
+      AppConstants.minReaderBrightness,
+      AppConstants.maxReaderBrightness,
+    );
+    await _commit(state.copyWith(brightness: clamped));
+    await _applyBrightness(clamped);
   }
 }
 
