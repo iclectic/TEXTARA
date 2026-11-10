@@ -2,7 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/reader_location.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
 
 class PdfReaderView extends ConsumerStatefulWidget {
   final Book book;
@@ -50,9 +53,22 @@ class _PdfReaderViewState extends ConsumerState<PdfReaderView> {
     setState(() => _isLoading = false);
   }
 
+  void _handlePendingJump(ReaderLocation? location) {
+    final controller = _controller;
+    if (location == null || controller == null || _totalPages <= 0) return;
+    if (location.format != BookFormat.pdf) return;
+    final target = location.pageIndex.clamp(1, _totalPages);
+    controller.goToPage(pageNumber: target);
+    widget.onPageChanged(target, _totalPages, 'Page $target');
+    ref.read(pendingReaderJumpProvider.notifier).state = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    ref.listen<ReaderLocation?>(pendingReaderJumpProvider, (previous, next) {
+      _handlePendingJump(next);
+    });
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -114,16 +130,15 @@ class _PdfReaderViewState extends ConsumerState<PdfReaderView> {
         },
         onViewerReady: (document, controller) {
           _totalPages = document.pages.length;
-          // Restore position
-          if (widget.book.currentPage > 0 &&
-              widget.book.currentPage <= _totalPages) {
-            controller.goToPage(pageNumber: widget.book.currentPage);
+          final resume = ReaderLocation.fromBook(widget.book)
+              .preservedAcrossTypographyChange();
+          final page = resume.pageIndex > 0 && resume.pageIndex <= _totalPages
+              ? resume.pageIndex
+              : 1;
+          if (page > 1) {
+            controller.goToPage(pageNumber: page);
           }
-          widget.onPageChanged(
-            widget.book.currentPage > 0 ? widget.book.currentPage : 1,
-            _totalPages,
-            'Page ${widget.book.currentPage > 0 ? widget.book.currentPage : 1}',
-          );
+          widget.onPageChanged(page, _totalPages, 'Page $page');
         },
       ),
     );

@@ -8,6 +8,7 @@ import 'package:textara/data/services/brightness_service.dart';
 import 'package:textara/data/services/reading_progress_persister.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/reader/epub_reader_view.dart';
 import 'package:textara/presentation/screens/reader/pdf_reader_view.dart';
@@ -112,7 +113,33 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
+  ReaderLocation _currentLocation() {
+    return ReaderLocation(
+      format: widget.book.format,
+      pageIndex: _currentPage,
+      chapterId: _currentChapterTitle.isEmpty ? null : _currentChapterTitle,
+      progress: _progress,
+    ).preservedAcrossTypographyChange();
+  }
+
+  void _jumpToBookmark(Bookmark bookmark) {
+    final location = ReaderLocation.fromBookmark(
+      bookmark,
+      format: widget.book.format,
+    );
+    ref.read(pendingReaderJumpProvider.notifier).state = location;
+    setState(() {
+      _currentPage = location.pageIndex;
+      _currentChapterTitle = location.chapterId ?? _currentChapterTitle;
+      _progress = location.progress > 0
+          ? location.progress
+          : (_totalPages > 0 ? location.pageIndex / _totalPages : 0.0);
+      _showControls = true;
+    });
+  }
+
   void _showAnnotations() {
+    final resumeLabel = _currentLocation().displayLabel;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -125,6 +152,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           bookId: widget.book.id,
           bookTitle: widget.book.title,
           scrollController: controller,
+          autoResumeLabel: resumeLabel,
+          onBookmarkJump: (bookmark) {
+            Navigator.of(context).pop();
+            _jumpToBookmark(bookmark);
+          },
         ),
       ),
     );
@@ -151,22 +183,25 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  void _addBookmark() {
+  Future<void> _addBookmark() async {
     HapticFeedback.mediumImpact();
-    final dao = ref.read(annotationDaoProvider);
+    final location = _currentLocation();
     final bookmark = Bookmark(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       bookId: widget.book.id,
-      pageNumber: _currentPage,
-      chapterId: _currentChapterTitle,
-      title: '$_currentChapterTitle - Page $_currentPage',
+      pageNumber: location.pageIndex,
+      chapterId: location.chapterId,
+      cfiLocation: location.toStableToken(),
+      title: location.displayLabel,
       createdAt: DateTime.now(),
     );
-    dao.insertBookmark(bookmark);
+    await ref.read(annotationDaoProvider).insertBookmark(bookmark);
+    ref.invalidate(bookBookmarksProvider(widget.book.id));
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Bookmark added'),
-        duration: Duration(seconds: 1),
+        content: Text('Bookmark saved (separate from auto-resume)'),
+        duration: Duration(seconds: 2),
       ),
     );
   }

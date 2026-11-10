@@ -6,6 +6,7 @@ import 'package:textara/domain/entities/book.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/widgets/library/book_grid_tile.dart';
 import 'package:textara/presentation/widgets/library/book_list_tile.dart';
+import 'package:textara/presentation/widgets/library/continue_reading_card.dart';
 import 'package:textara/presentation/widgets/library/library_empty_state.dart';
 import 'package:textara/presentation/widgets/library/sort_bottom_sheet.dart';
 import 'package:textara/presentation/screens/reader/reader_screen.dart';
@@ -182,39 +183,73 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     LibraryViewMode viewMode,
     bool isTablet,
   ) {
+    final continueBook = ref.watch(continueReadingBookProvider);
+
     if (viewMode == LibraryViewMode.list) {
-      return ListView.separated(
+      return ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: books.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 4),
+        itemCount: books.length + (continueBook != null ? 1 : 0),
         itemBuilder: (context, index) {
-          return BookListTile(
-            book: books[index],
-            onTap: () => _openBook(books[index]),
-            onFavourite: () {
-              ref.read(booksProvider.notifier).toggleFavourite(books[index].id);
-            },
+          if (continueBook != null && index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ContinueReadingCard(
+                book: continueBook,
+                onContinue: () => _openBook(continueBook),
+              ),
+            );
+          }
+          final bookIndex = continueBook != null ? index - 1 : index;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: BookListTile(
+              book: books[bookIndex],
+              onTap: () => _openBook(books[bookIndex]),
+              onFavourite: () {
+                ref
+                    .read(booksProvider.notifier)
+                    .toggleFavourite(books[bookIndex].id);
+              },
+            ),
           );
         },
       );
     }
 
     final crossAxisCount = isTablet ? 4 : 2;
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 0.62,
-      ),
-      itemCount: books.length,
-      itemBuilder: (context, index) {
-        return BookGridTile(
-          book: books[index],
-          onTap: () => _openBook(books[index]),
-        );
-      },
+    return CustomScrollView(
+      slivers: [
+        if (continueBook != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: ContinueReadingCard(
+                book: continueBook,
+                onContinue: () => _openBook(continueBook),
+              ),
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 0.62,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return BookGridTile(
+                  book: books[index],
+                  onTap: () => _openBook(books[index]),
+                );
+              },
+              childCount: books.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
