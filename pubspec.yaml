@@ -63,12 +63,33 @@ dev_dependencies:
   sqflite_common_ffi: ^2.3.4+4
   integration_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  macos:
+    generate: true
+  image_path: assets/branding/app_icon.png
+  adaptive_icon_background: "#F5F0E8"
+  adaptive_icon_foreground: assets/branding/app_icon_foreground.png
+
+flutter_native_splash:
+  color: "#F5F0E8"
+  image: assets/branding/splash.png
+  android_12:
+    color: "#F5F0E8"
+    image: assets/branding/splash.png
+  ios: true
+  web: false
 
 flutter:
   uses-material-design: true
   assets:
     - assets/
     - assets/sample/
+    - assets/branding/
   fonts:
     - family: OpenDyslexic
       fonts:

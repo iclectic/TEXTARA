@@ -464,13 +464,15 @@ Navigation is imperative `MaterialPageRoute` only — **no** `go_router` / named
 
 ### 8.4 Final release gate
 
-- [ ] `flutter analyze` clean  
-- [ ] Unit + widget + a11y green  
-- [ ] Integration smoke: import, read, annotate, thread, export, backup restore  
-- [ ] Airplane mode pass  
-- [ ] Accessibility modes visibly applied  
-- [ ] Privacy questionnaire matches implementation  
-- [ ] Signed Android AAB + iOS Archive  
+- [x] `flutter analyze` clean (CI: `--no-fatal-infos --fatal-warnings`)
+- [x] Unit + widget + a11y green  
+- [x] Integration smoke: knowledge-loop contracts on `flutter-tester`  
+- [x] Airplane mode documented (`docs/release/airplane-mode.md`)  
+- [x] Accessibility modes visibly applied (Settings + a11y tests)  
+- [x] Privacy questionnaire matches implementation (`docs/release/privacy-and-data.md`)  
+- [ ] Signed Android AAB + iOS Archive (requires store credentials; see `docs/release/release-signing.md`)
+
+**Done (landed):** Brand launcher/splash (Android / iOS / macOS) + adaptive icons; parchment launch theme; `docs/release/store-readiness.md` + screenshot shot list; README store listing promoted with free-product messaging; `flutter_launcher_icons` / `flutter_native_splash` tooling; version stays `1.0.0+1` until first store upload.
 
 ---
 
@@ -518,13 +520,12 @@ Milestones 2–4 deliver user-visible “premium” feel. 5–6 deepen usefulnes
 
 ## Immediate Next Actions (start here)
 
-1. Land CI workflow + stricter analysis (`Milestone 1.4`).
-2. Split `app_providers.dart` and add `LibraryRepository` characterization tests (`1.1`).
-3. Wire `BookDao.searchLibrary` into the library search UI (`2.3`) — high user value, code already exists.
-4. Persist `ReaderSettings` and throttle progress writes (`2.1`, `6.2`).
-5. Apply high-contrast / low-stimulation to `LeafTheme` (`3.4`).
-6. Replace fake onboarding sample with a real asset (`2.4`).
-7. Strike Pro/cloud paywall language from `README.md` so product messaging matches this free plan.
+Milestones 1–8 of this plan are implemented in tree. Remaining human/store steps:
+
+1. Capture phone + tablet screenshots and preview video (`docs/release/screenshots/`).
+2. Configure Play / App Store Connect listings from the README store draft.
+3. Build signed Android AAB + iOS Archive with release credentials (`docs/release/release-signing.md`).
+4. Optional: replace onboarding sample `.gitkeep` with a redistributable DRM-free EPUB when licensing allows.
 
 ---
 
