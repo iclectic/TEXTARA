@@ -14,6 +14,7 @@ class ImportResult {
   final bool success;
   final Book? book;
   final String? errorMessage;
+  final String? sourceFileName;
   final bool skipped;
   final bool replaced;
 
@@ -21,6 +22,7 @@ class ImportResult {
     required this.success,
     this.book,
     this.errorMessage,
+    this.sourceFileName,
     this.skipped = false,
     this.replaced = false,
   });
@@ -112,12 +114,14 @@ class ImportService {
   }) async {
     String? destPath;
     String? coverPath;
+    final sourceName = p.basename(filePath);
     try {
       final validation = await _securityPolicy.validateBookFile(filePath);
       if (!validation.isValid) {
         return ImportResult(
           success: false,
           errorMessage: validation.errorMessage,
+          sourceFileName: sourceName,
         );
       }
 
@@ -166,7 +170,12 @@ class ImportService {
         );
         final resolution = await onDuplicate(existing, incomingStub);
         if (resolution == DuplicateResolution.skip) {
-          return ImportResult(success: true, book: existing, skipped: true);
+          return ImportResult(
+            success: true,
+            book: existing,
+            skipped: true,
+            sourceFileName: sourceName,
+          );
         }
         if (resolution == DuplicateResolution.replace) {
           await _bookDao.deleteBook(existing.id);
@@ -220,6 +229,7 @@ class ImportService {
         success: true,
         book: book,
         replaced: existing != null,
+        sourceFileName: sourceName,
       );
     } catch (e) {
       if (destPath != null) {
@@ -231,6 +241,7 @@ class ImportService {
       return ImportResult(
         success: false,
         errorMessage: 'Import failed: ${e.toString()}',
+        sourceFileName: sourceName,
       );
     }
   }

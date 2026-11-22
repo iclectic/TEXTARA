@@ -11,6 +11,7 @@ import 'package:textara/core/theme/leaf_tokens.dart';
 import 'package:textara/presentation/screens/library/collections_screen.dart';
 import 'package:textara/presentation/screens/reader/reader_screen.dart';
 import 'package:textara/presentation/screens/shell/app_shell.dart';
+import 'package:textara/presentation/widgets/common/async_state_views.dart';
 import 'package:textara/presentation/widgets/library/book_details_sheet.dart';
 import 'package:textara/presentation/widgets/library/book_grid_tile.dart';
 import 'package:textara/presentation/widgets/library/book_list_tile.dart';
@@ -97,7 +98,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     final successCount = results.where((r) => r.success && !r.skipped).length;
     final skippedCount = results.where((r) => r.skipped).length;
-    final failCount = results.where((r) => !r.success).length;
+    final failures = results.where((r) => !r.success).toList();
 
     if (results.isNotEmpty) {
       await ref.read(booksProvider.notifier).loadBooks();
@@ -113,12 +114,38 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       if (skippedCount > 0) {
         parts.add('$skippedCount skipped');
       }
-      if (failCount > 0) {
-        parts.add('$failCount failed');
+      if (failures.isNotEmpty) {
+        parts.add('${failures.length} failed');
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('${parts.join(', ')}.')));
+
+      if (failures.isNotEmpty) {
+        final details = failures
+            .map((r) {
+              final name = r.sourceFileName ?? 'Unknown file';
+              final reason = r.errorMessage ?? 'Unknown error';
+              return '• $name — $reason';
+            })
+            .join('\n');
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Import summary'),
+            content: SingleChildScrollView(
+              child: Text('${parts.join(', ')}.\n\n$details'),
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${parts.join(', ')}.')));
+      }
     }
   }
 
@@ -638,29 +665,6 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: theme.colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
-          ],
-        ),
-      ),
-    );
+    return AppErrorView(message: message, onRetry: onRetry);
   }
 }

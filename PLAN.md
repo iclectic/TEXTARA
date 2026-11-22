@@ -431,6 +431,8 @@ Navigation is imperative `MaterialPageRoute` only — **no** `go_router` / named
 
 **Exit criteria:** A11y tests gate PRs; integration smoke for the knowledge loop; error states visible.
 
+**Done (landed):** `test/a11y/accessibility_guidelines_test.dart` (semantics, text scale, contrast across themes); shared `AppErrorView` / `AppEmptyView`; import summary dialog with per-file failure reasons; `integration_test/knowledge_loop_smoke_test.dart` on `flutter-tester` in CI; reader chrome widget tests; `tool/check.sh` + CI gate the smoke.
+
 ---
 
 ## Milestone 8 — App Store Readiness & Ship

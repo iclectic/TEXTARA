@@ -147,50 +147,47 @@ final filteredBooksProvider = Provider<List<Book>>((ref) {
   final formatFilter = ref.watch(libraryFormatFilterProvider);
   final collectionFilter = ref.watch(libraryCollectionFilterProvider);
 
-  return booksAsync.when(
-    data: (books) {
-      var filtered = List<Book>.from(books);
-      if (favouritesOnly) {
-        filtered = filtered.where((b) => b.isFavourite).toList();
-      }
-      if (statusFilter != null) {
-        filtered = filtered
-            .where((b) => b.readingStatus == statusFilter)
-            .toList();
-      }
-      if (formatFilter != null) {
-        filtered = filtered.where((b) => b.format == formatFilter).toList();
-      }
-      if (collectionFilter != null) {
-        final ids = ref.watch(collectionBookIdsProvider(collectionFilter));
-        final allowed = ids.valueOrNull;
-        if (allowed != null) {
-          filtered = filtered.where((b) => allowed.contains(b.id)).toList();
-        }
-      }
-      filtered.sort((a, b) {
-        final int cmp;
-        switch (sortField) {
-          case LibrarySortField.title:
-            cmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
-          case LibrarySortField.author:
-            cmp = a.author.toLowerCase().compareTo(b.author.toLowerCase());
-          case LibrarySortField.progress:
-            cmp = a.readingProgress.compareTo(b.readingProgress);
-          case LibrarySortField.recentlyOpened:
-            final aDate = a.lastOpenedAt ?? DateTime(1970);
-            final bDate = b.lastOpenedAt ?? DateTime(1970);
-            cmp = aDate.compareTo(bDate);
-          case LibrarySortField.lastAdded:
-            cmp = a.dateAdded.compareTo(b.dateAdded);
-        }
-        return sortOrder == SortOrder.ascending ? cmp : -cmp;
-      });
-      return filtered;
-    },
-    loading: () => const [],
-    error: (error, stackTrace) => const [],
-  );
+  // Callers must also watch [booksProvider] for loading/error UI — this
+  // provider only returns a list for browse mode and never hides failures.
+  final books = booksAsync.valueOrNull;
+  if (books == null) return const [];
+
+  var filtered = List<Book>.from(books);
+  if (favouritesOnly) {
+    filtered = filtered.where((b) => b.isFavourite).toList();
+  }
+  if (statusFilter != null) {
+    filtered = filtered.where((b) => b.readingStatus == statusFilter).toList();
+  }
+  if (formatFilter != null) {
+    filtered = filtered.where((b) => b.format == formatFilter).toList();
+  }
+  if (collectionFilter != null) {
+    final ids = ref.watch(collectionBookIdsProvider(collectionFilter));
+    final allowed = ids.valueOrNull;
+    if (allowed != null) {
+      filtered = filtered.where((b) => allowed.contains(b.id)).toList();
+    }
+  }
+  filtered.sort((a, b) {
+    final int cmp;
+    switch (sortField) {
+      case LibrarySortField.title:
+        cmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+      case LibrarySortField.author:
+        cmp = a.author.toLowerCase().compareTo(b.author.toLowerCase());
+      case LibrarySortField.progress:
+        cmp = a.readingProgress.compareTo(b.readingProgress);
+      case LibrarySortField.recentlyOpened:
+        final aDate = a.lastOpenedAt ?? DateTime(1970);
+        final bDate = b.lastOpenedAt ?? DateTime(1970);
+        cmp = aDate.compareTo(bDate);
+      case LibrarySortField.lastAdded:
+        cmp = a.dateAdded.compareTo(b.dateAdded);
+    }
+    return sortOrder == SortOrder.ascending ? cmp : -cmp;
+  });
+  return filtered;
 });
 
 final collectionBookIdsProvider = FutureProvider.family<List<String>, String>((
