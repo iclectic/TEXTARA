@@ -7,8 +7,14 @@ import 'package:textara/domain/entities/book.dart';
 class BookGridTile extends StatelessWidget {
   final Book book;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
-  const BookGridTile({super.key, required this.book, required this.onTap});
+  const BookGridTile({
+    super.key,
+    required this.book,
+    required this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +25,7 @@ class BookGridTile extends StatelessWidget {
       button: true,
       child: GestureDetector(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

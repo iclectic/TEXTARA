@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:textara/core/theme/leaf_tokens.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/reader_location.dart';
@@ -230,11 +231,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
                       onPageChanged: (page, total, title) =>
                           _onPageChanged(page, total, title),
                     ),
-              if (_showControls)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _ChromeFade(
+                  visible: _showControls,
                   child: ReaderAppBar(
                     title: widget.book.title,
                     onBack: () async {
@@ -247,11 +249,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
                     onSettings: _showSettings,
                   ),
                 ),
-              if (_showControls)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _ChromeFade(
+                  visible: _showControls,
                   child: ReaderBottomBar(
                     positionLabel: _location.positionLabel,
                     chapterTitle: _location.chapterTitle ?? '',
@@ -261,9 +265,36 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
                     onAnnotations: _showAnnotations,
                   ),
                 ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ChromeFade extends ConsumerWidget {
+  final bool visible;
+  final Widget child;
+
+  const _ChromeFade({required this.visible, required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reduced = ref.watch(reducedMotionProvider);
+    final duration = LeafTokens.motion(
+      context,
+      preferred: LeafTokens.motionFast,
+      forceReduce: reduced,
+    );
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: duration,
+        curve: LeafTokens.curve(reduced),
+        child: child,
       ),
     );
   }

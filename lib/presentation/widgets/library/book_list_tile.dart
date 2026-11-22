@@ -7,12 +7,14 @@ class BookListTile extends StatelessWidget {
   final Book book;
   final VoidCallback onTap;
   final VoidCallback onFavourite;
+  final VoidCallback? onLongPress;
 
   const BookListTile({
     super.key,
     required this.book,
     required this.onTap,
     required this.onFavourite,
+    this.onLongPress,
   });
 
   String _statusLabel(ReadingStatus status) {
@@ -49,6 +51,7 @@ class BookListTile extends StatelessWidget {
         margin: EdgeInsets.zero,
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(12),

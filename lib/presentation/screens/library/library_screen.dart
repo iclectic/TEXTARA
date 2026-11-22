@@ -7,16 +7,20 @@ import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/search_result.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
+import 'package:textara/core/theme/leaf_tokens.dart';
+import 'package:textara/presentation/screens/library/collections_screen.dart';
+import 'package:textara/presentation/screens/reader/reader_screen.dart';
+import 'package:textara/presentation/screens/shell/app_shell.dart';
+import 'package:textara/presentation/widgets/library/book_details_sheet.dart';
 import 'package:textara/presentation/widgets/library/book_grid_tile.dart';
 import 'package:textara/presentation/widgets/library/book_list_tile.dart';
 import 'package:textara/presentation/widgets/library/library_empty_state.dart';
 import 'package:textara/presentation/widgets/library/sort_bottom_sheet.dart';
-import 'package:textara/presentation/screens/reader/reader_screen.dart';
-import 'package:textara/presentation/screens/settings/settings_screen.dart';
-import 'package:textara/presentation/screens/threads/idea_threads_screen.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
-  const LibraryScreen({super.key});
+  final bool embeddedInShell;
+
+  const LibraryScreen({super.key, this.embeddedInShell = false});
 
   @override
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
@@ -193,27 +197,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             tooltip: 'Sort books',
           ),
           IconButton(
-            icon: const Icon(Icons.account_tree_outlined),
+            icon: const Icon(Icons.folder_outlined),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const IdeaThreadsScreen()),
+                MaterialPageRoute(builder: (_) => const CollectionsScreen()),
               );
             },
-            tooltip: 'Idea Threads',
+            tooltip: 'Collections',
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_rounded),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-            },
-            tooltip: 'Settings',
-          ),
+          if (!widget.embeddedInShell)
+            IconButton(
+              icon: const Icon(Icons.home_outlined),
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const AppShell()),
+                );
+              },
+              tooltip: 'Open shell',
+            ),
         ],
       ),
       body: Column(
         children: [
+          if (!_isSearching) _buildFilterChips(theme),
           if (importProgress.isImporting)
             Material(
               color: theme.colorScheme.primaryContainer,
@@ -346,23 +352,155 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  Widget _buildFilterChips(ThemeData theme) {
+    final favouritesOnly = ref.watch(libraryFavouritesOnlyProvider);
+    final status = ref.watch(libraryStatusFilterProvider);
+    final format = ref.watch(libraryFormatFilterProvider);
+    final collectionId = ref.watch(libraryCollectionFilterProvider);
+    final collections = ref.watch(collectionsProvider).valueOrNull ?? const [];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(
+        LeafTokens.spaceMd,
+        LeafTokens.spaceSm,
+        LeafTokens.spaceMd,
+        LeafTokens.spaceSm,
+      ),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('Favourites'),
+            selected: favouritesOnly,
+            onSelected: (v) =>
+                ref.read(libraryFavouritesOnlyProvider.notifier).state = v,
+          ),
+          const SizedBox(width: LeafTokens.spaceSm),
+          FilterChip(
+            label: Text(status?.name ?? 'Status'),
+            selected: status != null,
+            onSelected: (_) async {
+              final next = await showModalBottomSheet<ReadingStatus?>(
+                context: context,
+                builder: (context) => SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        title: const Text('Any status'),
+                        onTap: () => Navigator.pop(context, null),
+                      ),
+                      ...ReadingStatus.values.map(
+                        (s) => ListTile(
+                          title: Text(s.name),
+                          onTap: () => Navigator.pop(context, s),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              ref.read(libraryStatusFilterProvider.notifier).state = next;
+            },
+          ),
+          const SizedBox(width: LeafTokens.spaceSm),
+          FilterChip(
+            label: Text(format?.name.toUpperCase() ?? 'Format'),
+            selected: format != null,
+            onSelected: (_) async {
+              final next = await showModalBottomSheet<BookFormat?>(
+                context: context,
+                builder: (context) => SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        title: const Text('Any format'),
+                        onTap: () => Navigator.pop(context, null),
+                      ),
+                      ...BookFormat.values.map(
+                        (f) => ListTile(
+                          title: Text(f.name.toUpperCase()),
+                          onTap: () => Navigator.pop(context, f),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              ref.read(libraryFormatFilterProvider.notifier).state = next;
+            },
+          ),
+          if (collections.isNotEmpty) ...[
+            const SizedBox(width: LeafTokens.spaceSm),
+            FilterChip(
+              label: Text(
+                collectionId == null
+                    ? 'Collection'
+                    : collections
+                          .firstWhere(
+                            (c) => c.id == collectionId,
+                            orElse: () => collections.first,
+                          )
+                          .name,
+              ),
+              selected: collectionId != null,
+              onSelected: (_) async {
+                final next = await showModalBottomSheet<String?>(
+                  context: context,
+                  builder: (context) => SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          title: const Text('All collections'),
+                          onTap: () => Navigator.pop(context, null),
+                        ),
+                        ...collections.map(
+                          (c) => ListTile(
+                            title: Text(c.name),
+                            onTap: () => Navigator.pop(context, c.id),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+                ref.read(libraryCollectionFilterProvider.notifier).state = next;
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildBooksList(
     List<Book> books,
     LibraryViewMode viewMode,
     bool isTablet,
   ) {
+    final reduced = ref.watch(reducedMotionProvider);
     if (viewMode == LibraryViewMode.list) {
       return ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: books.length,
         separatorBuilder: (context, index) => const SizedBox(height: 4),
         itemBuilder: (context, index) {
-          return BookListTile(
-            book: books[index],
-            onTap: () => _openBook(books[index]),
-            onFavourite: () {
-              ref.read(booksProvider.notifier).toggleFavourite(books[index].id);
-            },
+          return _Appear(
+            index: index,
+            reducedMotion: reduced,
+            child: BookListTile(
+              book: books[index],
+              onTap: () => _openBook(books[index]),
+              onLongPress: () =>
+                  showBookDetailsSheet(context: context, book: books[index]),
+              onFavourite: () {
+                ref
+                    .read(booksProvider.notifier)
+                    .toggleFavourite(books[index].id);
+              },
+            ),
           );
         },
       );
@@ -379,11 +517,51 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       ),
       itemCount: books.length,
       itemBuilder: (context, index) {
-        return BookGridTile(
-          book: books[index],
-          onTap: () => _openBook(books[index]),
+        return _Appear(
+          index: index,
+          reducedMotion: reduced,
+          child: BookGridTile(
+            book: books[index],
+            onTap: () => _openBook(books[index]),
+            onLongPress: () =>
+                showBookDetailsSheet(context: context, book: books[index]),
+          ),
         );
       },
+    );
+  }
+}
+
+class _Appear extends StatelessWidget {
+  final int index;
+  final bool reducedMotion;
+  final Widget child;
+
+  const _Appear({
+    required this.index,
+    required this.reducedMotion,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (reducedMotion || MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: LeafTokens.motionFast + Duration(milliseconds: 20 * index),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 8),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

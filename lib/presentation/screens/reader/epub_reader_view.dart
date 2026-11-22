@@ -138,15 +138,18 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
     final settings = ref.watch(readerSettingsProvider);
     final dyslexia = ref.watch(dyslexiaModeProvider);
 
-    var fontFamily = settings.fontFamily;
     if (dyslexia) {
-      fontFamily = 'OpenDyslexic';
+      // Bundled offline font — never depend on Google Fonts for a11y.
+      return const TextStyle(fontFamily: 'OpenDyslexic').copyWith(
+        fontSize: settings.fontSize,
+        height: settings.lineHeight + 0.15,
+      );
     }
 
     TextStyle base;
     try {
       base = GoogleFonts.getFont(
-        fontFamily,
+        settings.fontFamily,
         fontSize: settings.fontSize,
         height: settings.lineHeight,
       );
