@@ -176,10 +176,15 @@ class BookListTile extends StatelessWidget {
   Widget _buildCover(ThemeData theme) {
     if (book.coverPath != null && book.coverPath!.isNotEmpty) {
       final file = File(book.coverPath!);
-      return Image.file(
-        file,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme),
+      return RepaintBoundary(
+        child: Image.file(
+          file,
+          fit: BoxFit.cover,
+          cacheWidth: 96,
+          cacheHeight: 136,
+          errorBuilder: (context, error, stackTrace) =>
+              _buildPlaceholder(theme),
+        ),
       );
     }
     return _buildPlaceholder(theme);

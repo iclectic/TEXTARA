@@ -37,42 +37,99 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (!lowStim) {
       unawaited(HapticFeedback.mediumImpact());
     }
+    final progress = ref.read(importProgressProvider.notifier);
     final importService = ref.read(importServiceProvider);
-    final results = await importService.pickAndImportFiles();
 
+    final results = await importService.pickAndImportFiles(
+      onProgress: (completed, total, fileName) {
+        if (completed == 0 && total > 0) {
+          progress.startImport(
+            List.generate(
+              total,
+              (i) => ImportJobFile(
+                path: '',
+                fileName: fileName ?? 'file ${i + 1}',
+              ),
+            ),
+          );
+        }
+        progress.updateProgress(completed, fileName);
+      },
+      isCancelled: () => progress.isCancelled,
+      onDuplicate: (existing, incoming) async {
+        if (!mounted) return DuplicateResolution.keepBoth;
+        final choice = await showDialog<DuplicateResolution>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Duplicate book'),
+            content: Text(
+              '"${existing.title}" by ${existing.author} is already in your library. What would you like to do?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    Navigator.pop(context, DuplicateResolution.skip),
+                child: const Text('Skip'),
+              ),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pop(context, DuplicateResolution.replace),
+                child: const Text('Replace'),
+              ),
+              FilledButton(
+                onPressed: () =>
+                    Navigator.pop(context, DuplicateResolution.keepBoth),
+                child: const Text('Keep both'),
+              ),
+            ],
+          ),
+        );
+        return choice ?? DuplicateResolution.skip;
+      },
+    );
+
+    progress.completeImport();
     if (!mounted) return;
 
-    final successCount = results.where((r) => r.success).length;
+    final successCount = results.where((r) => r.success && !r.skipped).length;
+    final skippedCount = results.where((r) => r.skipped).length;
     final failCount = results.where((r) => !r.success).length;
 
     if (results.isNotEmpty) {
       await ref.read(booksProvider.notifier).loadBooks();
       if (!mounted) return;
-      final String message;
-      if (failCount == 0) {
-        message = successCount == 1
-            ? 'Book imported successfully.'
-            : '$successCount books imported successfully.';
-      } else {
-        message =
-            '$successCount imported, $failCount failed. Check file format and try again.';
+      final parts = <String>[];
+      if (successCount > 0) {
+        parts.add(
+          successCount == 1
+              ? '1 book imported'
+              : '$successCount books imported',
+        );
+      }
+      if (skippedCount > 0) {
+        parts.add('$skippedCount skipped');
+      }
+      if (failCount > 0) {
+        parts.add('$failCount failed');
       }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(SnackBar(content: Text('${parts.join(', ')}.')));
     }
   }
 
-  Future<void> _openBook(Book book) async {
+  Future<void> _openBook(Book book, {String? chapterId}) async {
     final lowStim = ref.read(lowStimulationProvider);
     if (!lowStim) {
       unawaited(HapticFeedback.lightImpact());
     }
     await ref.read(libraryRepositoryProvider).updateLastOpened(book.id);
     if (!mounted) return;
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => ReaderScreen(book: book)));
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ReaderScreen(book: book, initialChapterId: chapterId),
+      ),
+    );
   }
 
   void _toggleSearch() {
@@ -101,6 +158,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final searchQuery = ref.watch(librarySearchQueryProvider).trim();
     final isSearching = _isSearching && searchQuery.isNotEmpty;
     final isLoading = booksState is AsyncLoading;
+    final importProgress = ref.watch(importProgressProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.shortestSide >= 600;
 
@@ -154,18 +212,67 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : booksState is AsyncError
-          ? _ErrorState(
-              onRetry: () => ref.read(booksProvider.notifier).loadBooks(),
-            )
-          : isSearching
-          ? _buildSearchBody(theme)
-          : books.isEmpty
-          ? LibraryEmptyState(onImport: _importBooks)
-          : _buildBooksList(books, viewMode, isTablet),
-      floatingActionButton: (!isSearching && books.isNotEmpty)
+      body: Column(
+        children: [
+          if (importProgress.isImporting)
+            Material(
+              color: theme.colorScheme.primaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: importProgress.progress > 0
+                            ? importProgress.progress
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        importProgress.currentFileName == null
+                            ? 'Importing ${importProgress.completed}/${importProgress.total}…'
+                            : 'Importing ${importProgress.currentFileName} '
+                                  '(${importProgress.completed}/${importProgress.total})',
+                        style: theme.textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => ref
+                          .read(importProgressProvider.notifier)
+                          .requestCancel(),
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : booksState is AsyncError
+                ? _ErrorState(
+                    onRetry: () => ref.read(booksProvider.notifier).loadBooks(),
+                  )
+                : isSearching
+                ? _buildSearchBody(theme)
+                : books.isEmpty
+                ? LibraryEmptyState(onImport: _importBooks)
+                : _buildBooksList(books, viewMode, isTablet),
+          ),
+        ],
+      ),
+      floatingActionButton:
+          (!isSearching && books.isNotEmpty && !importProgress.isImporting)
           ? FloatingActionButton.extended(
               onPressed: _importBooks,
               icon: const Icon(Icons.add_rounded),
@@ -201,7 +308,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           itemBuilder: (context, index) {
             return _SearchResultTile(
               result: results[index],
-              onTap: () => _openBook(results[index].book),
+              onTap: () => _openBook(
+                results[index].book,
+                chapterId: results[index].chapterId,
+              ),
             );
           },
         );

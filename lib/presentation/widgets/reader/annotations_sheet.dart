@@ -9,12 +9,14 @@ class AnnotationsSheet extends ConsumerStatefulWidget {
   final String bookId;
   final String bookTitle;
   final ScrollController scrollController;
+  final void Function(Bookmark bookmark)? onJumpToBookmark;
 
   const AnnotationsSheet({
     super.key,
     required this.bookId,
     required this.bookTitle,
     required this.scrollController,
+    this.onJumpToBookmark,
   });
 
   @override
@@ -142,6 +144,27 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Added to Idea Thread')));
+  }
+
+  Future<void> _deleteHighlightWithUndo(Highlight highlight) async {
+    HapticFeedback.lightImpact();
+    final dao = ref.read(annotationDaoProvider);
+    await dao.deleteHighlight(highlight.id);
+    ref.invalidate(bookHighlightsProvider(widget.bookId));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Highlight deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            await dao.insertHighlight(highlight);
+            ref.invalidate(bookHighlightsProvider(widget.bookId));
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _exportToPdf() async {
@@ -360,13 +383,7 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                   onPressed: () => _addHighlightToThread(highlight),
                 ),
                 InkWell(
-                  onTap: () async {
-                    HapticFeedback.lightImpact();
-                    await ref
-                        .read(annotationDaoProvider)
-                        .deleteHighlight(highlight.id);
-                    ref.invalidate(bookHighlightsProvider(widget.bookId));
-                  },
+                  onTap: () => _deleteHighlightWithUndo(highlight),
                   child: Icon(
                     Icons.delete_outline_rounded,
                     size: 18,
@@ -427,6 +444,9 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
       margin: EdgeInsets.zero,
       child: ListTile(
         dense: true,
+        onTap: widget.onJumpToBookmark == null
+            ? null
+            : () => widget.onJumpToBookmark!(bookmark),
         leading: Icon(
           Icons.bookmark_rounded,
           color: theme.colorScheme.primary,

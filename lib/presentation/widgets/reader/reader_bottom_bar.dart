@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ReaderBottomBar extends StatelessWidget {
-  final int currentPage;
-  final int totalPages;
+  final String positionLabel;
   final String chapterTitle;
   final double progress;
   final int minutesLeft;
@@ -11,8 +10,7 @@ class ReaderBottomBar extends StatelessWidget {
 
   const ReaderBottomBar({
     super.key,
-    required this.currentPage,
-    required this.totalPages,
+    required this.positionLabel,
     required this.chapterTitle,
     required this.progress,
     required this.minutesLeft,
@@ -42,7 +40,6 @@ class ReaderBottomBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(2),
               child: LinearProgressIndicator(
@@ -55,7 +52,6 @@ class ReaderBottomBar extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // Info row
             Row(
               children: [
                 Expanded(
@@ -70,7 +66,7 @@ class ReaderBottomBar extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '$currentPage / $totalPages',
+                  positionLabel,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     fontSize: 11,
@@ -89,7 +85,6 @@ class ReaderBottomBar extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

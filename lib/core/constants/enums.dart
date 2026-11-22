@@ -18,6 +18,8 @@ enum ExportFormat { markdown, pdf, json }
 
 enum ImportSource { filePicker, shareIntent, openWith, dragDrop }
 
+enum DuplicateResolution { skip, replace, keepBoth }
+
 enum BackupScope { metadataOnly, withFiles }
 
 enum TtsState { playing, paused, stopped }
