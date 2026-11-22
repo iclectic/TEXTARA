@@ -88,6 +88,30 @@ class BookDao {
     return _mapToBook(maps.first);
   }
 
+  /// Finds an existing book that looks like a duplicate import.
+  Future<Book?> findDuplicate({
+    required String title,
+    required String author,
+    required int fileSizeBytes,
+  }) async {
+    final db = await _db;
+    final maps = await db.query(
+      'books',
+      where: 'LOWER(title) = ? AND LOWER(author) = ? AND file_size_bytes = ?',
+      whereArgs: [title.toLowerCase(), author.toLowerCase(), fileSizeBytes],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return _mapToBook(maps.first);
+  }
+
+  /// Ranking helpers exposed for unit tests.
+  double metadataRankForTest(Book book, String lowerQuery) =>
+      _metadataRank(book, lowerQuery);
+
+  String buildExcerptForTest(String content, String lowerQuery) =>
+      _buildExcerpt(content, lowerQuery);
+
   Future<void> insertBook(Book book) async {
     final db = await _db;
     await db.insert(

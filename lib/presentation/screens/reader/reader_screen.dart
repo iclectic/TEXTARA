@@ -3,21 +3,24 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/annotation.dart';
+import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/reader_location.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
+import 'package:textara/presentation/screens/reader/epub_reader_controller.dart';
 import 'package:textara/presentation/screens/reader/epub_reader_view.dart';
 import 'package:textara/presentation/screens/reader/pdf_reader_view.dart';
+import 'package:textara/presentation/widgets/reader/annotations_sheet.dart';
 import 'package:textara/presentation/widgets/reader/reader_app_bar.dart';
 import 'package:textara/presentation/widgets/reader/reader_bottom_bar.dart';
 import 'package:textara/presentation/widgets/reader/reader_settings_sheet.dart';
-import 'package:textara/presentation/widgets/reader/annotations_sheet.dart';
 import 'package:textara/presentation/widgets/reader/toc_sheet.dart';
 
 class ReaderScreen extends ConsumerStatefulWidget {
   final Book book;
+  final String? initialChapterId;
 
-  const ReaderScreen({super.key, required this.book});
+  const ReaderScreen({super.key, required this.book, this.initialChapterId});
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -26,19 +29,21 @@ class ReaderScreen extends ConsumerStatefulWidget {
 class _ReaderScreenState extends ConsumerState<ReaderScreen>
     with WidgetsBindingObserver {
   bool _showControls = true;
-  int _currentPage = 0;
-  int _totalPages = 1;
-  String _currentChapterTitle = '';
-  double _progress = 0.0;
+  late ReaderLocation _location;
   late final ReadingProgressWriter _progressWriter;
+  final EpubReaderController _epubController = EpubReaderController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _currentPage = widget.book.currentPage;
-    _totalPages = widget.book.totalPages > 0 ? widget.book.totalPages : 1;
-    _progress = widget.book.readingProgress;
+    _location = ReaderLocation(
+      pageIndex: widget.book.currentPage,
+      totalPages: widget.book.totalPages > 0 ? widget.book.totalPages : 1,
+      chapterId: widget.book.currentChapterId,
+      chapterTitle: widget.book.currentChapterId,
+      isEpub: widget.book.isEpub,
+    );
     _progressWriter = ReadingProgressWriter(
       ref.read(libraryRepositoryProvider),
     );
@@ -47,7 +52,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // Fire-and-forget final flush; [dispose] cannot be async.
     unawaited(_progressWriter.flush());
     _progressWriter.dispose();
     super.dispose();
@@ -68,19 +72,27 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     setState(() => _showControls = !_showControls);
   }
 
-  void _onPageChanged(int page, int total, String chapterTitle) {
+  void _onPageChanged(
+    int page,
+    int total,
+    String chapterTitle, [
+    String? chapterId,
+  ]) {
     setState(() {
-      _currentPage = page;
-      _totalPages = total > 0 ? total : 1;
-      _currentChapterTitle = chapterTitle;
-      _progress = total > 0 ? page / total : 0.0;
+      _location = ReaderLocation(
+        pageIndex: page,
+        totalPages: total > 0 ? total : 1,
+        chapterId: chapterId ?? chapterTitle,
+        chapterTitle: chapterTitle,
+        isEpub: widget.book.isEpub,
+      );
     });
 
     _progressWriter.schedule(
       bookId: widget.book.id,
-      progress: _progress,
+      progress: _location.progress,
       page: page,
-      chapterId: chapterTitle,
+      chapterId: chapterId ?? chapterTitle,
     );
   }
 
@@ -112,6 +124,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
           bookId: widget.book.id,
           bookTitle: widget.book.title,
           scrollController: controller,
+          onJumpToBookmark: (bookmark) {
+            Navigator.pop(context);
+            _epubController.jumpToChapter(bookmark.pageNumber);
+          },
         ),
       ),
     );
@@ -131,10 +147,31 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
           scrollController: controller,
           onChapterSelected: (chapterId) {
             Navigator.pop(context);
+            // Prefer order index encoded in TOC; fall back to id match via index 0 jump then id.
+            final orderMatch = int.tryParse(
+              chapterId.replaceFirst('chapter_', ''),
+            );
+            if (orderMatch != null && chapterId.startsWith('chapter_')) {
+              _epubController.jumpToChapter(orderMatch);
+            } else {
+              // Jump by scanning: controller only takes index; encode via cached order.
+              // TocSheet ids are contentFileName — resolve by reloading cache index.
+              unawaited(_jumpByChapterId(chapterId));
+            }
           },
         ),
       ),
     );
+  }
+
+  Future<void> _jumpByChapterId(String chapterId) async {
+    final chapters = await ref
+        .read(epubChapterCacheProvider)
+        .chaptersFor(widget.book.filePath);
+    final idx = chapters.indexWhere((c) => c.id == chapterId);
+    if (idx >= 0) {
+      _epubController.jumpToChapter(idx);
+    }
   }
 
   Future<void> _addBookmark() async {
@@ -145,12 +182,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     final bookmark = Bookmark(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       bookId: widget.book.id,
-      pageNumber: _currentPage,
-      chapterId: _currentChapterTitle,
-      title: '$_currentChapterTitle - Page $_currentPage',
+      pageNumber: _location.pageIndex,
+      chapterId: _location.chapterId,
+      title:
+          '${_location.chapterTitle ?? 'Chapter'} — ${_location.positionLabel}',
       createdAt: DateTime.now(),
     );
     await dao.insertBookmark(bookmark);
+    ref.invalidate(bookBookmarksProvider(widget.book.id));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -161,8 +200,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
   }
 
   int _estimateMinutesLeft() {
-    if (_progress <= 0 || _progress >= 1.0) return 0;
-    final pagesLeft = _totalPages - _currentPage;
+    if (_location.progress <= 0 || _location.progress >= 1.0) return 0;
+    final pagesLeft = _location.totalPages - _location.pageIndex;
     return (pagesLeft * 1.2).round();
   }
 
@@ -182,11 +221,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
               widget.book.isEpub
                   ? EpubReaderView(
                       book: widget.book,
+                      controller: _epubController,
+                      initialChapterId: widget.initialChapterId,
                       onPageChanged: _onPageChanged,
                     )
                   : PdfReaderView(
                       book: widget.book,
-                      onPageChanged: _onPageChanged,
+                      onPageChanged: (page, total, title) =>
+                          _onPageChanged(page, total, title),
                     ),
               if (_showControls)
                 Positioned(
@@ -211,10 +253,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
                   left: 0,
                   right: 0,
                   child: ReaderBottomBar(
-                    currentPage: _currentPage,
-                    totalPages: _totalPages,
-                    chapterTitle: _currentChapterTitle,
-                    progress: _progress,
+                    positionLabel: _location.positionLabel,
+                    chapterTitle: _location.chapterTitle ?? '',
+                    progress: _location.progress,
                     minutesLeft: _estimateMinutesLeft(),
                     onToc: _showTableOfContents,
                     onAnnotations: _showAnnotations,

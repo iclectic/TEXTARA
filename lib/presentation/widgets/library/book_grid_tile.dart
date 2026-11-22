@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:textara/domain/entities/book.dart';
 
 class BookGridTile extends StatelessWidget {
@@ -98,6 +100,18 @@ class BookGridTile extends StatelessWidget {
       return Image.file(
         file,
         fit: BoxFit.cover,
+        cacheWidth: 320,
+        cacheHeight: 480,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) {
+            return RepaintBoundary(child: child);
+          }
+          return Shimmer.fromColors(
+            baseColor: theme.colorScheme.surfaceContainerHighest,
+            highlightColor: theme.colorScheme.surface,
+            child: Container(color: theme.colorScheme.surfaceContainerHighest),
+          );
+        },
         errorBuilder: (context, error, stackTrace) =>
             _buildPlaceholderCover(theme),
       );

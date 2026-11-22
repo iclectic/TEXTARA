@@ -6,6 +6,7 @@ import 'package:textara/data/database/database_helper.dart';
 import 'package:textara/data/database/idea_thread_dao.dart';
 import 'package:textara/data/repositories/sqlite_backup_repository.dart';
 import 'package:textara/data/repositories/sqlite_library_repository.dart';
+import 'package:textara/data/services/epub_chapter_cache.dart';
 import 'package:textara/data/services/epub_parser_service.dart';
 import 'package:textara/data/services/export_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
@@ -43,6 +44,10 @@ final fileStorageProvider = Provider<FileStorageService>((ref) {
 
 final epubParserProvider = Provider<EpubParserService>((ref) {
   return EpubParserService();
+});
+
+final epubChapterCacheProvider = Provider<EpubChapterCache>((ref) {
+  return EpubChapterCache(ref.watch(epubParserProvider));
 });
 
 final importServiceProvider = Provider<ImportService>((ref) {
