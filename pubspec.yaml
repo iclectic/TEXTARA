@@ -46,6 +46,10 @@ dependencies:
   # TTS
   flutter_tts: ^4.2.0
 
+  # Share + local reminders
+  share_plus: ^10.1.4
+  flutter_local_notifications: ^18.0.1
+
   # Export
   pdf: ^3.11.2
 

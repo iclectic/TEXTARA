@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:textara/core/constants/enums.dart';
 import 'package:textara/core/theme/leaf_tokens.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
@@ -33,6 +34,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
   late ReaderLocation _location;
   late final ReadingProgressWriter _progressWriter;
   final EpubReaderController _epubController = EpubReaderController();
+  String? _sessionId;
 
   @override
   void initState() {
@@ -48,6 +50,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     _progressWriter = ReadingProgressWriter(
       ref.read(libraryRepositoryProvider),
     );
+    unawaited(_startSession());
+  }
+
+  Future<void> _startSession() async {
+    _sessionId = await ref
+        .read(readingStatsDaoProvider)
+        .startSession(widget.book.id);
+  }
+
+  Future<void> _endSession() async {
+    final id = _sessionId;
+    if (id == null) return;
+    _sessionId = null;
+    await ref.read(readingStatsDaoProvider).endSession(id);
+    ref.invalidate(readingStatsProvider);
   }
 
   @override
@@ -55,6 +72,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_progressWriter.flush());
     _progressWriter.dispose();
+    unawaited(_endSession());
     super.dispose();
   }
 
@@ -64,6 +82,24 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
         state == AppLifecycleState.inactive) {
       unawaited(_progressWriter.flush());
     }
+  }
+
+  Future<void> _toggleTts() async {
+    if (!widget.book.isEpub) return;
+    final tts = ref.read(ttsStateProvider);
+    if (tts.state == TtsState.playing) {
+      await ref.read(ttsStateProvider.notifier).stop();
+      return;
+    }
+    final text = _epubController.currentChapterText();
+    if (text.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nothing to read aloud yet.')),
+      );
+      return;
+    }
+    await ref.read(ttsStateProvider.notifier).speak(text);
   }
 
   void _toggleControls() {
@@ -241,12 +277,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
                     title: widget.book.title,
                     onBack: () async {
                       await _progressWriter.flush();
+                      await _endSession();
                       if (context.mounted) {
                         Navigator.of(context).pop();
                       }
                     },
                     onBookmark: _addBookmark,
                     onSettings: _showSettings,
+                    onTts: widget.book.isEpub ? _toggleTts : null,
+                    ttsPlaying:
+                        ref.watch(ttsStateProvider).state == TtsState.playing,
                   ),
                 ),
               ),

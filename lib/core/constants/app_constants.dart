@@ -35,6 +35,7 @@ class AppConstants {
   static const String prefKeyLowStimulation = 'low_stimulation';
   static const String prefKeyReaderDefaults = 'reader_defaults';
   static const String prefKeyThreadInsights = 'thread_insights_enabled';
+  static const String prefKeyReadingReminder = 'reading_reminder_enabled';
 
   static const String backupFileExtension = 'textara';
   static const String backupMimeType = 'application/json';

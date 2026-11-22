@@ -11,7 +11,7 @@ class DatabaseHelper {
   static Database? _database;
 
   /// Current schema version written by [openDatabase].
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 3;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -135,6 +135,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_bookmarks_book ON bookmarks(book_id)');
     await db.execute('CREATE INDEX idx_fts_book ON full_text_search(book_id)');
     await _createIdeaThreadTables(db);
+    await _createReadingSessionTables(db);
   }
 
   @visibleForTesting
@@ -142,6 +143,25 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       await _createIdeaThreadTables(db);
     }
+    if (oldVersion < 3) {
+      await _createReadingSessionTables(db);
+    }
+  }
+
+  Future<void> _createReadingSessionTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS reading_sessions (
+        id TEXT PRIMARY KEY,
+        book_id TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        seconds_read INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_reading_sessions_book ON reading_sessions(book_id)',
+    );
   }
 
   Future<void> _createIdeaThreadTables(Database db) async {

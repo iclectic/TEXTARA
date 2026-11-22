@@ -1,7 +1,7 @@
 # Textara SQLite schema
 
 Database file: `textara.db` in the application documents directory  
-Current version: **2** (`DatabaseHelper` in `lib/data/database/database_helper.dart`)
+Current version: **3** (`DatabaseHelper` in `lib/data/database/database_helper.dart`)
 
 ## Tables
 
@@ -46,10 +46,21 @@ Plain table of chapter text for EPUB (LIKE search today; FTS5 upgrade tracked in
 ### `idea_threads` / `thread_highlights`
 Added in schema version 2. `thread_highlights` links highlights into threads with optional `reflection` and `sort_order`.
 
+### `reading_sessions`
+Added in schema version 3 for local reading-time stats.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | TEXT PK | UUID |
+| book_id | TEXT | FK → books |
+| started_at, ended_at | TEXT ISO8601 | |
+| seconds_read | INTEGER | computed on end |
+
 ## Migrations
 
 - **v1 → v2:** create Idea Thread tables (`_createIdeaThreadTables`).
-- Fresh installs run `_onCreate` at the latest version (must stay schema-equivalent to an upgraded DB).
+- **v2 → v3:** create `reading_sessions`.
+- Fresh installs run `onCreate` at the latest version (must stay schema-equivalent to an upgraded DB).
 
 ## Backup JSON
 

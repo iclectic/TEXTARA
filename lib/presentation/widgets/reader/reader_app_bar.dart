@@ -5,6 +5,8 @@ class ReaderAppBar extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onBookmark;
   final VoidCallback onSettings;
+  final VoidCallback? onTts;
+  final bool ttsPlaying;
 
   const ReaderAppBar({
     super.key,
@@ -12,6 +14,8 @@ class ReaderAppBar extends StatelessWidget {
     required this.onBack,
     required this.onBookmark,
     required this.onSettings,
+    this.onTts,
+    this.ttsPlaying = false,
   });
 
   @override
@@ -51,6 +55,16 @@ class ReaderAppBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (onTts != null)
+              IconButton(
+                icon: Icon(
+                  ttsPlaying
+                      ? Icons.stop_circle_outlined
+                      : Icons.record_voice_over_outlined,
+                ),
+                onPressed: onTts,
+                tooltip: ttsPlaying ? 'Stop reading aloud' : 'Read aloud',
+              ),
             IconButton(
               icon: const Icon(Icons.bookmark_add_outlined),
               onPressed: onBookmark,

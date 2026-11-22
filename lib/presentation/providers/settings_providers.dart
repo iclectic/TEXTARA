@@ -75,6 +75,12 @@ final threadInsightsEnabledProvider =
       );
     });
 
+/// Local reading reminders — default **off**.
+final readingReminderEnabledProvider =
+    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
+      return BoolSettingNotifier(AppConstants.prefKeyReadingReminder);
+    });
+
 class BoolSettingNotifier extends StateNotifier<bool> {
   final String _prefKey;
   final bool defaultValue;

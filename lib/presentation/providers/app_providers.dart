@@ -10,3 +10,4 @@ export 'library_providers.dart';
 export 'reader_providers.dart';
 export 'settings_providers.dart';
 export 'threads_providers.dart';
+export 'tts_providers.dart';

@@ -19,7 +19,7 @@ void main() {
     return rows.map((r) => r['name'] as String).toSet();
   }
 
-  test('fresh onCreate at v2 creates expected tables', () async {
+  test('fresh onCreate at latest version creates expected tables', () async {
     final path =
         '${Directory.systemTemp.path}/textara_fresh_${DateTime.now().microsecondsSinceEpoch}.db';
     addTearDown(() {
@@ -28,7 +28,7 @@ void main() {
     });
 
     final helper = DatabaseHelper();
-    final db = await helper.openAtPath(path, version: 2);
+    final db = await helper.openAtPath(path);
     final tables = await tableNames(db);
     expect(
       tables,
@@ -41,13 +41,14 @@ void main() {
         'full_text_search',
         'idea_threads',
         'thread_highlights',
+        'reading_sessions',
       }),
     );
-    expect(await db.getVersion(), 2);
+    expect(await db.getVersion(), DatabaseHelper.schemaVersion);
     await db.close();
   });
 
-  test('upgrade from v1 to v2 adds idea thread tables', () async {
+  test('upgrade from v1 to latest adds idea threads and sessions', () async {
     final path =
         '${Directory.systemTemp.path}/textara_upgrade_${DateTime.now().microsecondsSinceEpoch}.db';
     addTearDown(() {
@@ -57,7 +58,6 @@ void main() {
 
     final helper = DatabaseHelper();
 
-    // Create a v1-shaped DB: books-only schema without idea threads.
     final v1 = await databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(
@@ -93,10 +93,13 @@ void main() {
     );
     await v1.close();
 
-    final upgraded = await helper.openAtPath(path, version: 2);
+    final upgraded = await helper.openAtPath(path);
     final tables = await tableNames(upgraded);
-    expect(tables, containsAll({'idea_threads', 'thread_highlights'}));
-    expect(await upgraded.getVersion(), 2);
+    expect(
+      tables,
+      containsAll({'idea_threads', 'thread_highlights', 'reading_sessions'}),
+    );
+    expect(await upgraded.getVersion(), DatabaseHelper.schemaVersion);
     await upgraded.close();
   });
 }
