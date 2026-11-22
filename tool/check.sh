@@ -10,7 +10,7 @@ echo "==> dart format"
 dart format --output=none --set-exit-if-changed .
 
 echo "==> flutter analyze"
-flutter analyze --fatal-warnings
+flutter analyze --no-fatal-infos --fatal-warnings
 
 echo "==> flutter test"
 flutter test

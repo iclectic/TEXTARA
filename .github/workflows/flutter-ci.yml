@@ -26,7 +26,8 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze
-        run: flutter analyze --fatal-warnings
+        # Infos alone must not fail the job (Flutter 3.50+ exits 1 on infos by default).
+        run: flutter analyze --no-fatal-infos --fatal-warnings
 
       - name: Test
         run: flutter test
