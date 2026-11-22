@@ -108,13 +108,22 @@ class IdeaThreadDao {
     await db.delete('idea_threads', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> addHighlightToThread({
+  /// Returns `true` when a new link was inserted, `false` if already linked.
+  Future<bool> addHighlightToThread({
     required String threadId,
     required String highlightId,
     String? reflection,
   }) async {
     final db = await _db;
     final now = DateTime.now().toIso8601String();
+    final existing = await db.query(
+      'thread_highlights',
+      where: 'thread_id = ? AND highlight_id = ?',
+      whereArgs: [threadId, highlightId],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) return false;
+
     final maxOrder =
         Sqflite.firstIntValue(
           await db.rawQuery(
@@ -136,6 +145,30 @@ class IdeaThreadDao {
       where: 'id = ?',
       whereArgs: [threadId],
     );
+    return true;
+  }
+
+  Future<void> reorderEvidence({
+    required String threadId,
+    required List<String> highlightIdsInOrder,
+  }) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      for (var i = 0; i < highlightIdsInOrder.length; i++) {
+        await txn.update(
+          'thread_highlights',
+          {'sort_order': i},
+          where: 'thread_id = ? AND highlight_id = ?',
+          whereArgs: [threadId, highlightIdsInOrder[i]],
+        );
+      }
+      await txn.update(
+        'idea_threads',
+        {'updated_at': DateTime.now().toIso8601String()},
+        where: 'id = ?',
+        whereArgs: [threadId],
+      );
+    });
   }
 
   Future<void> removeHighlightFromThread({

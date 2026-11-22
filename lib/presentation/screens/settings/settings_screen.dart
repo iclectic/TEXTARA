@@ -18,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
     final highContrast = ref.watch(highContrastProvider);
     final dyslexiaMode = ref.watch(dyslexiaModeProvider);
     final lowStimulation = ref.watch(lowStimulationProvider);
+    final threadInsights = ref.watch(threadInsightsEnabledProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -74,6 +75,20 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (_) {
               HapticFeedback.selectionClick();
               ref.read(lowStimulationProvider.notifier).toggle();
+            },
+          ),
+          const Divider(height: 32),
+
+          _SectionHeader(title: 'Idea Threads'),
+          SwitchListTile(
+            title: const Text('Local suggestions'),
+            subtitle: const Text(
+              'Show offline tips like recurring terms or threads that need evidence',
+            ),
+            value: threadInsights,
+            onChanged: (_) {
+              HapticFeedback.selectionClick();
+              ref.read(threadInsightsEnabledProvider.notifier).toggle();
             },
           ),
           const Divider(height: 32),

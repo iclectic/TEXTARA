@@ -8,11 +8,17 @@ class AnnotationEditorResult {
   final HighlightColour colour;
   final String? note;
   final String? threadId;
+  final String? threadReflection;
+  final bool createNewThread;
+  final String? newThreadTitle;
 
   const AnnotationEditorResult({
     required this.colour,
     this.note,
     this.threadId,
+    this.threadReflection,
+    this.createNewThread = false,
+    this.newThreadTitle,
   });
 }
 
@@ -50,7 +56,10 @@ class _AnnotationEditorSheetState
     extends ConsumerState<_AnnotationEditorSheet> {
   late HighlightColour _colour;
   final _noteController = TextEditingController();
+  final _reflectionController = TextEditingController();
+  final _newThreadTitleController = TextEditingController();
   String? _threadId;
+  bool _createNewThread = false;
   List<IdeaThread> _threads = const [];
 
   @override
@@ -69,6 +78,8 @@ class _AnnotationEditorSheetState
   @override
   void dispose() {
     _noteController.dispose();
+    _reflectionController.dispose();
+    _newThreadTitleController.dispose();
     super.dispose();
   }
 
@@ -178,8 +189,25 @@ class _AnnotationEditorSheetState
                   border: OutlineInputBorder(),
                 ),
               ),
-              if (_threads.isNotEmpty) ...[
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Create new Idea Thread'),
+                value: _createNewThread,
+                onChanged: (v) => setState(() {
+                  _createNewThread = v;
+                  if (v) _threadId = null;
+                }),
+              ),
+              if (_createNewThread)
+                TextField(
+                  controller: _newThreadTitleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Thread title',
+                    border: OutlineInputBorder(),
+                  ),
+                )
+              else if (_threads.isNotEmpty)
                 DropdownButtonFormField<String?>(
                   initialValue: _threadId,
                   decoration: const InputDecoration(
@@ -200,16 +228,31 @@ class _AnnotationEditorSheetState
                   ],
                   onChanged: (v) => setState(() => _threadId = v),
                 ),
+              if (_createNewThread || _threadId != null) ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _reflectionController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Thread reflection (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
               ],
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () {
                   final note = _noteController.text.trim();
+                  final reflection = _reflectionController.text.trim();
+                  final newTitle = _newThreadTitleController.text.trim();
                   Navigator.of(context).pop(
                     AnnotationEditorResult(
                       colour: _colour,
                       note: note.isEmpty ? null : note,
-                      threadId: _threadId,
+                      threadId: _createNewThread ? null : _threadId,
+                      threadReflection: reflection.isEmpty ? null : reflection,
+                      createNewThread: _createNewThread,
+                      newThreadTitle: newTitle.isEmpty ? null : newTitle,
                     ),
                   );
                 },
