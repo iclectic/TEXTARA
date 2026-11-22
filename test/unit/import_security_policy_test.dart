@@ -84,5 +84,23 @@ void main() {
       expect(policy.isPathInsideDirectory(inside, tempDir.path), true);
       expect(policy.isPathInsideDirectory(outside, tempDir.path), false);
     });
+
+    test('rejects zip-slip entry names', () {
+      expect(policy.isSafeZipEntryName('OEBPS/chapter1.xhtml'), isTrue);
+      expect(policy.isSafeZipEntryName('../evil.txt'), isFalse);
+      expect(policy.isSafeZipEntryName('OEBPS/../../etc/passwd'), isFalse);
+      expect(policy.isSafeZipEntryName('/absolute/path'), isFalse);
+      expect(policy.isSafeZipEntryName(r'..\windows\system32'), isFalse);
+    });
+
+    test('rejects XML entity expansion payloads', () {
+      expect(policy.isSafeXmlPayload('<p>hello</p>'), isTrue);
+      expect(
+        policy.isSafeXmlPayload(
+          '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><foo>&xxe;</foo>',
+        ),
+        isFalse,
+      );
+    });
   });
 }

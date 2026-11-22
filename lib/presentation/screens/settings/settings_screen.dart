@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/core/errors/local_error_log.dart';
+import 'package:textara/data/services/encrypted_backup.dart';
 import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 
@@ -143,6 +147,22 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Restore from a Textara backup file'),
             onTap: () => _importBackup(context, ref),
           ),
+          ListTile(
+            leading: const Icon(Icons.lock_outline_rounded),
+            title: const Text('Export encrypted backup'),
+            subtitle: const Text(
+              'Passphrase-protected copy — stays on this device unless you share it',
+            ),
+            onTap: () => _exportEncryptedBackup(context, ref),
+          ),
+          ListTile(
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Export diagnostics'),
+            subtitle: const Text(
+              'Local error log only — no book titles or contents',
+            ),
+            onTap: () => _exportDiagnostics(context),
+          ),
           const Divider(height: 32),
 
           _SectionHeader(title: 'About'),
@@ -177,6 +197,83 @@ class SettingsScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Backup failed. Please try again.')),
+      );
+    }
+  }
+
+  Future<void> _exportEncryptedBackup(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    HapticFeedback.mediumImpact();
+    final controller = TextEditingController();
+    final passphrase = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Encrypted backup'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Passphrase (min 8 characters)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Encrypt'),
+          ),
+        ],
+      ),
+    );
+    if (passphrase == null || passphrase.trim().length < 8) {
+      if (!context.mounted) return;
+      if (passphrase != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passphrase must be at least 8 characters.'),
+          ),
+        );
+      }
+      return;
+    }
+    try {
+      final plainPath = await ref.read(exportServiceProvider).exportBackup();
+      final plain = await File(plainPath).readAsString();
+      final sealed = EncryptedBackup.seal(plain, passphrase);
+      final encPath = plainPath.replaceFirst('.json', '.textara.json');
+      await File(encPath).writeAsString(sealed);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Encrypted backup saved to: $encPath')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Encrypted backup failed. Please try again.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _exportDiagnostics(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+    try {
+      final path = await LocalErrorLog.exportDiagnostics();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Diagnostics saved to: $path')));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not export diagnostics.')),
       );
     }
   }
