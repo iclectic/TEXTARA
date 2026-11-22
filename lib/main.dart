@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/errors/local_error_log.dart';
@@ -12,6 +13,8 @@ import 'package:textara/presentation/screens/shell/app_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Prefer bundled fonts offline; never block reading on network font fetch.
+  GoogleFonts.config.allowRuntimeFetching = false;
   LocalErrorLog.installHooks();
 
   SystemChrome.setSystemUIOverlayStyle(

@@ -52,6 +52,8 @@ dependencies:
 
   # Export
   pdf: ^3.11.2
+  encrypt: ^5.0.3
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:

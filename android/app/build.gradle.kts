@@ -32,9 +32,22 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Store release builds must use a release keystore (see
+            // docs/release/release-signing.md). Debug signing remains only so
+            // local `flutter run --release` works before a keystore is configured.
+            // CI / Play upload: set TEXTARA_UPLOAD_STORE_FILE and related env vars.
+            val uploadStoreFile = System.getenv("TEXTARA_UPLOAD_STORE_FILE")
+            if (uploadStoreFile != null) {
+                signingConfigs.create("release") {
+                    storeFile = file(uploadStoreFile)
+                    storePassword = System.getenv("TEXTARA_UPLOAD_STORE_PASSWORD")
+                    keyAlias = System.getenv("TEXTARA_UPLOAD_KEY_ALIAS")
+                    keyPassword = System.getenv("TEXTARA_UPLOAD_KEY_PASSWORD")
+                }
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }

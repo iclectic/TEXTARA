@@ -139,6 +139,30 @@ class ImportSecurityPolicy {
         p.isWithin(normalizedDirectory, normalizedFile);
   }
 
+  /// Rejects zip-slip style entry names (`../`, absolute paths, backslashes escaping).
+  bool isSafeZipEntryName(String entryName) {
+    final cleaned = entryName.replaceAll('\\', '/').trim();
+    if (cleaned.isEmpty) return false;
+    if (cleaned.startsWith('/') || cleaned.contains(':')) return false;
+    final normalized = p.posix.normalize(cleaned);
+    if (normalized == '..' || normalized.startsWith('../')) return false;
+    final parts = normalized.split('/');
+    if (parts.contains('..')) return false;
+    return true;
+  }
+
+  /// Rejects XML with external entity / DOCTYPE declarations (XXE hardening).
+  bool isSafeXmlPayload(String xml) {
+    final lower = xml.toLowerCase();
+    if (lower.contains('<!doctype') || lower.contains('<!entity')) {
+      return false;
+    }
+    if (lower.contains('system "') || lower.contains("system '")) {
+      return false;
+    }
+    return true;
+  }
+
   String _extensionWithoutDot(String filePath) {
     return p.extension(filePath).replaceFirst('.', '').toLowerCase();
   }

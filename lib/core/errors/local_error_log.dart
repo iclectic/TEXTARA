@@ -54,4 +54,31 @@ class LocalErrorLog {
       return true;
     };
   }
+
+  /// Writes a user-reviewable diagnostics export under documents/exports.
+  /// Never includes book titles or chapter text — only error lines.
+  static Future<String> exportDiagnostics() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final exportDir = Directory(p.join(dir.path, 'exports'));
+    if (!await exportDir.exists()) {
+      await exportDir.create(recursive: true);
+    }
+    final stamp = DateTime.now().toUtc().toIso8601String().replaceAll(':', '-');
+    final out = File(p.join(exportDir.path, 'textara_diagnostics_$stamp.txt'));
+    final buffer = StringBuffer()
+      ..writeln('Textara local diagnostics')
+      ..writeln('Generated: ${DateTime.now().toUtc().toIso8601String()}Z')
+      ..writeln('Contains error logs only — no book titles or contents.')
+      ..writeln('---')
+      ..writeln();
+    final logFile = File(p.join(dir.path, fileName));
+    if (await logFile.exists()) {
+      buffer.writeln(await logFile.readAsString());
+    }
+    for (final entry in _ring) {
+      buffer.writeln(entry);
+    }
+    await out.writeAsString(buffer.toString());
+    return out.path;
+  }
 }
