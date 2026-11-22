@@ -10,12 +10,12 @@ class CollectionDao {
   Future<Database> get _db => _dbHelper.database;
 
   Map<String, dynamic> _collectionToMap(Collection c) => {
-        'id': c.id,
-        'name': c.name,
-        'description': c.description,
-        'created_at': c.createdAt.toIso8601String(),
-        'updated_at': c.updatedAt.toIso8601String(),
-      };
+    'id': c.id,
+    'name': c.name,
+    'description': c.description,
+    'created_at': c.createdAt.toIso8601String(),
+    'updated_at': c.updatedAt.toIso8601String(),
+  };
 
   Collection _mapToCollection(Map<String, dynamic> map, {int bookCount = 0}) =>
       Collection(
@@ -44,43 +44,56 @@ class CollectionDao {
 
   Future<Collection?> getCollectionById(String id) async {
     final db = await _db;
-    final maps =
-        await db.query('collections', where: 'id = ?', whereArgs: [id]);
+    final maps = await db.query(
+      'collections',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isEmpty) return null;
     return _mapToCollection(maps.first);
   }
 
   Future<void> insertCollection(Collection collection) async {
     final db = await _db;
-    await db.insert('collections', _collectionToMap(collection),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'collections',
+      _collectionToMap(collection),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> updateCollection(Collection collection) async {
     final db = await _db;
-    await db.update('collections', _collectionToMap(collection),
-        where: 'id = ?', whereArgs: [collection.id]);
+    await db.update(
+      'collections',
+      _collectionToMap(collection),
+      where: 'id = ?',
+      whereArgs: [collection.id],
+    );
   }
 
   Future<void> deleteCollection(String id) async {
     final db = await _db;
-    await db.delete('book_collections',
-        where: 'collection_id = ?', whereArgs: [id]);
+    await db.delete(
+      'book_collections',
+      where: 'collection_id = ?',
+      whereArgs: [id],
+    );
     await db.delete('collections', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> addBookToCollection(
-      String bookId, String collectionId) async {
+  Future<void> addBookToCollection(String bookId, String collectionId) async {
     final db = await _db;
-    await db.insert(
-      'book_collections',
-      {'book_id': bookId, 'collection_id': collectionId},
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('book_collections', {
+      'book_id': bookId,
+      'collection_id': collectionId,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<void> removeBookFromCollection(
-      String bookId, String collectionId) async {
+    String bookId,
+    String collectionId,
+  ) async {
     final db = await _db;
     await db.delete(
       'book_collections',
@@ -91,8 +104,11 @@ class CollectionDao {
 
   Future<List<String>> getBookIdsForCollection(String collectionId) async {
     final db = await _db;
-    final maps = await db.query('book_collections',
-        where: 'collection_id = ?', whereArgs: [collectionId]);
+    final maps = await db.query(
+      'book_collections',
+      where: 'collection_id = ?',
+      whereArgs: [collectionId],
+    );
     return maps.map((m) => m['book_id'] as String).toList();
   }
 }

@@ -198,6 +198,16 @@ class BookDao {
     );
   }
 
+  Future<void> updateReadingStatus(String bookId, ReadingStatus status) async {
+    final db = await _db;
+    await db.update(
+      'books',
+      {'reading_status': status.name},
+      where: 'id = ?',
+      whereArgs: [bookId],
+    );
+  }
+
   Future<List<String>> getAllTags() async {
     final db = await _db;
     final maps = await db.query('books', columns: ['tags']);

@@ -8,16 +8,15 @@ import 'package:textara/presentation/widgets/library/library_empty_state.dart';
 
 void main() {
   group('LibraryEmptyState widget', () {
-    testWidgets('displays import button and empty message',
-        (WidgetTester tester) async {
+    testWidgets('displays import button and empty message', (
+      WidgetTester tester,
+    ) async {
       bool importTapped = false;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LibraryEmptyState(
-              onImport: () => importTapped = true,
-            ),
+            body: LibraryEmptyState(onImport: () => importTapped = true),
           ),
         ),
       );
@@ -47,10 +46,7 @@ void main() {
             body: SizedBox(
               width: 200,
               height: 300,
-              child: BookGridTile(
-                book: book,
-                onTap: () {},
-              ),
+              child: BookGridTile(book: book, onTap: () {}),
             ),
           ),
         ),
@@ -60,8 +56,9 @@ void main() {
       expect(find.text('Charles Dickens'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows favourite indicator when book is favourite',
-        (WidgetTester tester) async {
+    testWidgets('shows favourite indicator when book is favourite', (
+      WidgetTester tester,
+    ) async {
       final book = Book(
         id: 'fav-test',
         title: 'Favourite Book',
@@ -78,10 +75,7 @@ void main() {
             body: SizedBox(
               width: 200,
               height: 300,
-              child: BookGridTile(
-                book: book,
-                onTap: () {},
-              ),
+              child: BookGridTile(book: book, onTap: () {}),
             ),
           ),
         ),
@@ -90,8 +84,9 @@ void main() {
       expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
     });
 
-    testWidgets('does not show favourite indicator for non-favourite',
-        (WidgetTester tester) async {
+    testWidgets('does not show favourite indicator for non-favourite', (
+      WidgetTester tester,
+    ) async {
       final book = Book(
         id: 'no-fav-test',
         title: 'Normal Book',
@@ -108,10 +103,7 @@ void main() {
             body: SizedBox(
               width: 200,
               height: 300,
-              child: BookGridTile(
-                book: book,
-                onTap: () {},
-              ),
+              child: BookGridTile(book: book, onTap: () {}),
             ),
           ),
         ),
@@ -122,8 +114,9 @@ void main() {
   });
 
   group('BookListTile widget', () {
-    testWidgets('displays book details and status',
-        (WidgetTester tester) async {
+    testWidgets('displays book details and status', (
+      WidgetTester tester,
+    ) async {
       final book = Book(
         id: 'list-test',
         title: 'Oliver Twist',
@@ -138,11 +131,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BookListTile(
-              book: book,
-              onTap: () {},
-              onFavourite: () {},
-            ),
+            body: BookListTile(book: book, onTap: () {}, onFavourite: () {}),
           ),
         ),
       );
@@ -154,8 +143,9 @@ void main() {
       expect(find.text('EPUB'), findsOneWidget);
     });
 
-    testWidgets('favourite button toggles correctly',
-        (WidgetTester tester) async {
+    testWidgets('favourite button toggles correctly', (
+      WidgetTester tester,
+    ) async {
       bool favouriteTapped = false;
       final book = Book(
         id: 'fav-toggle',
@@ -184,8 +174,9 @@ void main() {
       expect(favouriteTapped, true);
     });
 
-    testWidgets('shows PDF format label for PDF books',
-        (WidgetTester tester) async {
+    testWidgets('shows PDF format label for PDF books', (
+      WidgetTester tester,
+    ) async {
       final book = Book(
         id: 'pdf-label',
         title: 'PDF Book',
@@ -198,11 +189,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: BookListTile(
-              book: book,
-              onTap: () {},
-              onFavourite: () {},
-            ),
+            body: BookListTile(book: book, onTap: () {}, onFavourite: () {}),
           ),
         ),
       );

@@ -18,10 +18,7 @@ void main() {
 
     test('copyWith updates specified fields only', () {
       const settings = ReaderSettings();
-      final updated = settings.copyWith(
-        fontSize: 20.0,
-        lineHeight: 2.0,
-      );
+      final updated = settings.copyWith(fontSize: 20.0, lineHeight: 2.0);
       expect(updated.fontSize, 20.0);
       expect(updated.lineHeight, 2.0);
       expect(updated.fontFamily, 'Literata');

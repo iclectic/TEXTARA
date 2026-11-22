@@ -49,18 +49,21 @@ Textara follows a clean layered architecture:
 lib/
   core/                     # Shared constants, theme, utilities
     constants/              # App-wide constants and enums
-    theme/                  # Theme system (8 built-in themes)
+    theme/                  # Theme system (8 built-in themes + a11y overlays)
   domain/                   # Business logic layer
     entities/               # Pure Dart models (Book, Highlight, Bookmark, etc.)
-    repositories/           # Repository interfaces (contracts)
+    repositories/           # Repository interfaces (e.g. LibraryRepository)
   data/                     # Data layer implementation
     database/               # SQLite via sqflite (DAOs for books, annotations, collections)
+    repositories/           # Repository implementations (SqliteLibraryRepository)
     services/               # File storage, EPUB parsing, import/export
   presentation/             # UI layer
-    providers/              # Riverpod state management
+    providers/              # Riverpod providers split by feature (+ app_providers barrel)
     screens/                # Full-page screens (library, reader, settings, onboarding)
     widgets/                # Reusable UI components
 ```
+
+See [PLAN.md](PLAN.md) for the free, premium-quality upgrade roadmap.
 
 ### Key Architectural Decisions
 
@@ -148,22 +151,16 @@ flutter test test/widget/
 - Onboarding flow
 - Accessibility modes (reduced motion, high contrast, dyslexia, low stimulation)
 
-### v1.5
+### Next (all free — see PLAN.md)
 - Text-to-speech for EPUB (play, pause, speed, voice selection)
 - Dictionary lookup (long-press to define, offline where possible)
-- Drag-and-drop import on tablets
-- Share-to-Textara import flow
-- Collections management UI
-- Metadata editing (title, author, cover)
-- Theme pack customisation (accent colour, background texture, highlight palette)
+- Drag-and-drop / share-to-Textara import
+- Collections management UI and metadata editing
+- Richer Idea Threads workspace and local insights
+- Reading statistics, home-screen widget, tablet two-pane layout
+- Optional user-hosted sync only if designed later — **no accounts, no paywall, no Pro tier**
 
-### v2.0
-- Optional cloud sync (Pro tier architecture already prepared)
-- Cross-device reading progress sync
-- Advanced export formats (Notion, Readwise)
-- Reading statistics and insights
-- Widget for home screen (currently reading)
-- Tablet-optimised two-pane layout
+Run local quality checks with `./tool/check.sh` (format, analyze, test). CI mirrors this on every PR via `.github/workflows/flutter-ci.yml`.
 
 ## Store Listing Draft
 

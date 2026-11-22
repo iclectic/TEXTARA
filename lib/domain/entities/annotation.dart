@@ -59,37 +59,37 @@ class Highlight extends Equatable {
   bool get hasNote => note != null && note!.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'bookId': bookId,
-        'chapterId': chapterId,
-        'selectedText': selectedText,
-        'colour': colour.name,
-        'note': note,
-        'startOffset': startOffset,
-        'endOffset': endOffset,
-        'cfiRange': cfiRange,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'bookId': bookId,
+    'chapterId': chapterId,
+    'selectedText': selectedText,
+    'colour': colour.name,
+    'note': note,
+    'startOffset': startOffset,
+    'endOffset': endOffset,
+    'cfiRange': cfiRange,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory Highlight.fromJson(Map<String, dynamic> json) => Highlight(
-        id: json['id'] as String,
-        bookId: json['bookId'] as String,
-        chapterId: json['chapterId'] as String?,
-        selectedText: json['selectedText'] as String? ?? '',
-        colour: HighlightColour.values.firstWhere(
-          (e) => e.name == json['colour'],
-          orElse: () => HighlightColour.yellow,
-        ),
-        note: json['note'] as String?,
-        startOffset: json['startOffset'] as int? ?? 0,
-        endOffset: json['endOffset'] as int? ?? 0,
-        cfiRange: json['cfiRange'] as String?,
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-            DateTime.now(),
-        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
-            DateTime.now(),
-      );
+    id: json['id'] as String,
+    bookId: json['bookId'] as String,
+    chapterId: json['chapterId'] as String?,
+    selectedText: json['selectedText'] as String? ?? '',
+    colour: HighlightColour.values.firstWhere(
+      (e) => e.name == json['colour'],
+      orElse: () => HighlightColour.yellow,
+    ),
+    note: json['note'] as String?,
+    startOffset: json['startOffset'] as int? ?? 0,
+    endOffset: json['endOffset'] as int? ?? 0,
+    cfiRange: json['cfiRange'] as String?,
+    createdAt:
+        DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+    updatedAt:
+        DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [id];
@@ -135,25 +135,25 @@ class Bookmark extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'bookId': bookId,
-        'chapterId': chapterId,
-        'pageNumber': pageNumber,
-        'cfiLocation': cfiLocation,
-        'title': title,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'bookId': bookId,
+    'chapterId': chapterId,
+    'pageNumber': pageNumber,
+    'cfiLocation': cfiLocation,
+    'title': title,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory Bookmark.fromJson(Map<String, dynamic> json) => Bookmark(
-        id: json['id'] as String,
-        bookId: json['bookId'] as String,
-        chapterId: json['chapterId'] as String?,
-        pageNumber: json['pageNumber'] as int? ?? 0,
-        cfiLocation: json['cfiLocation'] as String?,
-        title: json['title'] as String?,
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-            DateTime.now(),
-      );
+    id: json['id'] as String,
+    bookId: json['bookId'] as String,
+    chapterId: json['chapterId'] as String?,
+    pageNumber: json['pageNumber'] as int? ?? 0,
+    cfiLocation: json['cfiLocation'] as String?,
+    title: json['title'] as String?,
+    createdAt:
+        DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [id];

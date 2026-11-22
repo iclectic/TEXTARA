@@ -8,24 +8,9 @@ enum LibrarySortField { recentlyOpened, title, author, progress, lastAdded }
 
 enum SortOrder { ascending, descending }
 
-enum ReaderThemeMode {
-  light,
-  dark,
-  trueBlack,
-  sepia,
-  highContrast,
-}
+enum ReaderThemeMode { light, dark, trueBlack, sepia, highContrast }
 
-enum HighlightColour {
-  yellow,
-  green,
-  blue,
-  pink,
-  orange,
-  purple,
-  red,
-  teal,
-}
+enum HighlightColour { yellow, green, blue, pink, orange, purple, red, teal }
 
 enum TextAlignment { left, right, centre, justify }
 

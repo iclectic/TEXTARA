@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/library/library_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -19,30 +24,64 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefKeyFirstRun, false);
     if (!mounted) return;
-    Navigator.of(
+    await Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (_) => const LibraryScreen()));
   }
 
   Future<void> _importSample() async {
-    HapticFeedback.lightImpact();
+    if (!ref.read(lowStimulationProvider)) {
+      unawaited(HapticFeedback.lightImpact());
+    }
     setState(() => _importing = true);
 
-    // Simulate importing a sample book
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final bytes = await rootBundle.load(AppConstants.sampleBookAsset);
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/welcome_to_textara.epub');
+      await tempFile.writeAsBytes(
+        bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+        flush: true,
+      );
 
-    if (!mounted) return;
-    setState(() => _importing = false);
+      final result = await ref
+          .read(importServiceProvider)
+          .importFile(tempFile.path);
+      await ref.read(booksProvider.notifier).loadBooks();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Sample book imported successfully. You can also import your own EPUB and PDF files.',
+      if (!mounted) return;
+
+      if (result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Sample book imported. You can also import your own EPUB and PDF files.',
+            ),
+          ),
+        );
+        await _completeOnboarding();
+      } else {
+        setState(() => _importing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.errorMessage ??
+                  'Could not import the sample book. You can skip and import your own.',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _importing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not import the sample book. You can skip and import your own.',
+          ),
         ),
-      ),
-    );
-
-    await _completeOnboarding();
+      );
+    }
   }
 
   @override
@@ -93,21 +132,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
-                  _FeatureRow(
+                  const _FeatureRow(
                     icon: Icons.menu_book_rounded,
                     title: 'DRM-free reading',
                     subtitle:
                         'Import your own EPUB and PDF files. No restrictions, no accounts required.',
                   ),
                   const SizedBox(height: 20),
-                  _FeatureRow(
+                  const _FeatureRow(
                     icon: Icons.palette_outlined,
                     title: 'Beautiful and customisable',
                     subtitle:
                         'Choose from 8 themes, adjust typography, and tailor the reading experience to your needs.',
                   ),
                   const SizedBox(height: 20),
-                  _FeatureRow(
+                  const _FeatureRow(
                     icon: Icons.offline_bolt_outlined,
                     title: 'Fully offline',
                     subtitle:

@@ -115,10 +115,7 @@ class _TocSheetState extends ConsumerState<TocSheet> {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
               ),
               const SizedBox(height: 12),
-              Text(
-                'PDF navigation',
-                style: theme.textTheme.titleSmall,
-              ),
+              Text('PDF navigation', style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               Text(
                 'Use the page slider to navigate through this PDF.',
@@ -164,7 +161,10 @@ class _TocSheetState extends ConsumerState<TocSheet> {
       children: [
         ListTile(
           dense: true,
-          contentPadding: EdgeInsets.only(left: 24.0 + (depth * 20.0), right: 24),
+          contentPadding: EdgeInsets.only(
+            left: 24.0 + (depth * 20.0),
+            right: 24,
+          ),
           title: Text(
             chapter.title,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -184,8 +184,9 @@ class _TocSheetState extends ConsumerState<TocSheet> {
             widget.onChapterSelected(chapter.id);
           },
         ),
-        ...chapter.subChapters
-            .map((sub) => _buildChapterTile(sub, theme, depth + 1)),
+        ...chapter.subChapters.map(
+          (sub) => _buildChapterTile(sub, theme, depth + 1),
+        ),
       ],
     );
   }

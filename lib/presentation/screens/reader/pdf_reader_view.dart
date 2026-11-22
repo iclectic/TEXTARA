@@ -100,16 +100,12 @@ class _PdfReaderViewState extends ConsumerState<PdfReaderView> {
       widget.book.filePath,
       controller: _controller,
       params: PdfViewerParams(
-        enableTextSelection: true,
+        textSelectionParams: const PdfTextSelectionParams(),
         pageDropShadow: null,
         backgroundColor: theme.scaffoldBackgroundColor,
         onPageChanged: (pageNumber) {
           if (pageNumber != null) {
-            widget.onPageChanged(
-              pageNumber,
-              _totalPages,
-              'Page $pageNumber',
-            );
+            widget.onPageChanged(pageNumber, _totalPages, 'Page $pageNumber');
           }
         },
         onViewerReady: (document, controller) {

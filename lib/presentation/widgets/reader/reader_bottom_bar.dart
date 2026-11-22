@@ -48,8 +48,9 @@ class ReaderBottomBar extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
                 minHeight: 3,
-                backgroundColor:
-                    theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                backgroundColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.08,
+                ),
                 valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
               ),
             ),
@@ -61,8 +62,7 @@ class ReaderBottomBar extends StatelessWidget {
                   child: Text(
                     chapterTitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 11,
                     ),
                     maxLines: 1,
@@ -81,8 +81,7 @@ class ReaderBottomBar extends StatelessWidget {
                   Text(
                     '${minutesLeft}min left',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       fontSize: 11,
                     ),
                   ),
