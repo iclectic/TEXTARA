@@ -60,6 +60,8 @@ class ImportService {
   }
 
   Future<ImportResult> importFile(String filePath) async {
+    String? destPath;
+    String? coverPath;
     try {
       final validation = await _securityPolicy.validateBookFile(filePath);
       if (!validation.isValid) {
@@ -74,13 +76,12 @@ class ImportService {
           ? BookFormat.epub
           : BookFormat.pdf;
 
-      final destPath = await _fileStorage.copyBookToLibrary(filePath, bookId);
+      destPath = await _fileStorage.copyBookToLibrary(filePath, bookId);
       final fileSize = validation.fileSizeBytes;
 
       String title = _extractFileNameWithoutExtension(filePath);
       String author = 'Unknown Author';
       String? description;
-      String? coverPath;
       String? language;
       String? publisher;
       int totalPages = 0;
@@ -101,8 +102,8 @@ class ImportService {
           }
 
           await _indexEpubContent(bookId, epubBook);
-        } catch (e) {
-          // Parsing failed but we still have the file
+        } catch (_) {
+          // Keep the copied file with filename-derived metadata when parse fails.
         }
       }
 
@@ -124,6 +125,12 @@ class ImportService {
       await _bookDao.insertBook(book);
       return ImportResult(success: true, book: book);
     } catch (e) {
+      if (destPath != null) {
+        await _fileStorage.deleteBookFile(destPath);
+      }
+      if (coverPath != null) {
+        await _fileStorage.deleteCoverFile(coverPath);
+      }
       return ImportResult(
         success: false,
         errorMessage: 'Import failed: ${e.toString()}',

@@ -1,17 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:textara/core/constants/app_constants.dart';
-import 'package:textara/domain/entities/backup_data.dart';
-import 'package:textara/data/database/book_dao.dart';
-import 'package:textara/data/database/annotation_dao.dart';
-import 'package:textara/data/database/collection_dao.dart';
-import 'package:textara/data/database/idea_thread_dao.dart';
-import 'package:textara/data/database/database_helper.dart';
-import 'package:textara/domain/entities/idea_thread.dart';
-import 'package:textara/data/services/file_storage_service.dart';
-import 'package:textara/data/services/import_security_policy.dart';
+
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:sqflite/sqflite.dart';
+import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/data/database/annotation_dao.dart';
+import 'package:textara/data/database/book_dao.dart';
+import 'package:textara/data/database/collection_dao.dart';
+import 'package:textara/data/database/database_helper.dart';
+import 'package:textara/data/database/idea_thread_dao.dart';
+import 'package:textara/data/services/file_storage_service.dart';
+import 'package:textara/data/services/import_security_policy.dart';
+import 'package:textara/domain/entities/backup_data.dart';
+import 'package:textara/domain/entities/idea_thread.dart';
 
 class ExportService {
   final BookDao _bookDao;
@@ -75,6 +77,9 @@ class ExportService {
     return exportPath;
   }
 
+  /// Restores a backup in a single SQLite transaction (all-or-nothing).
+  ///
+  /// Returns `null` when validation fails or the transaction rolls back.
   Future<BackupData?> importBackup(String filePath) async {
     try {
       final validation = await _securityPolicy.validateBackupFile(filePath);
@@ -87,24 +92,51 @@ class ExportService {
 
       if (!backup.isValid) return null;
 
-      for (final book in backup.books) {
-        await _bookDao.insertBook(book);
-      }
-      for (final highlight in backup.highlights) {
-        await _annotationDao.insertHighlight(highlight);
-      }
-      for (final bookmark in backup.bookmarks) {
-        await _annotationDao.insertBookmark(bookmark);
-      }
-      for (final collection in backup.collections) {
-        await _collectionDao.insertCollection(collection);
-      }
-      for (final thread in backup.ideaThreads) {
-        await _ideaThreadDao.insertThread(thread);
-      }
-      for (final link in backup.threadHighlightLinks) {
-        await _ideaThreadDao.insertHighlightLink(link);
-      }
+      final db = await DatabaseHelper().database;
+      await db.transaction((txn) async {
+        for (final book in backup.books) {
+          await txn.insert(
+            'books',
+            _bookDao.toMapForTransaction(book),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        for (final highlight in backup.highlights) {
+          await txn.insert(
+            'highlights',
+            _annotationDao.highlightToMapForTransaction(highlight),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        for (final bookmark in backup.bookmarks) {
+          await txn.insert(
+            'bookmarks',
+            _annotationDao.bookmarkToMapForTransaction(bookmark),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        for (final collection in backup.collections) {
+          await txn.insert(
+            'collections',
+            _collectionDao.toMapForTransaction(collection),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        for (final thread in backup.ideaThreads) {
+          await txn.insert(
+            'idea_threads',
+            _ideaThreadDao.toMapForTransaction(thread),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        for (final link in backup.threadHighlightLinks) {
+          await txn.insert(
+            'thread_highlights',
+            _ideaThreadDao.linkToMapForTransaction(link),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      });
 
       return backup;
     } catch (e) {

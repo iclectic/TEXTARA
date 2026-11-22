@@ -9,6 +9,8 @@ class CollectionDao {
 
   Future<Database> get _db => _dbHelper.database;
 
+  Map<String, dynamic> toMapForTransaction(Collection c) => _collectionToMap(c);
+
   Map<String, dynamic> _collectionToMap(Collection c) => {
     'id': c.id,
     'name': c.name,

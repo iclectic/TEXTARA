@@ -3,14 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
+import 'package:textara/core/errors/local_error_log.dart';
 import 'package:textara/core/theme/leaf_theme.dart';
 import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
-import 'package:textara/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:textara/presentation/screens/library/library_screen.dart';
+import 'package:textara/presentation/screens/onboarding/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LocalErrorLog.installHooks();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

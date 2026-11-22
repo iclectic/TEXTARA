@@ -10,6 +10,12 @@ class AnnotationDao {
 
   Future<Database> get _db => _dbHelper.database;
 
+  Map<String, dynamic> highlightToMapForTransaction(Highlight h) =>
+      _highlightToMap(h);
+
+  Map<String, dynamic> bookmarkToMapForTransaction(Bookmark b) =>
+      _bookmarkToMap(b);
+
   Map<String, dynamic> _highlightToMap(Highlight h) => {
     'id': h.id,
     'book_id': h.bookId,
