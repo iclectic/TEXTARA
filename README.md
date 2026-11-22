@@ -1,168 +1,8 @@
 # Textara
 
-A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessible, and fully offline.
+A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessible, and fully offline — **completely free**, with no accounts, ads, or paywalls.
 
-## Setup Instructions
-
-### Prerequisites
-
-- Flutter SDK (stable channel, 3.11+)
-- Dart SDK 3.11+
-- Xcode (for iOS) or Android Studio (for Android)
-
-### Step-by-step Setup
-
-1. **Clone and enter the project**
-   ```bash
-   cd textara
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run on a device or simulator**
-   ```bash
-   flutter run
-   ```
-
-4. **Run tests**
-   ```bash
-   flutter test
-   ```
-
-5. **Build for release**
-   ```bash
-   # Android
-   flutter build apk --release
-
-   # iOS
-   flutter build ios --release
-   ```
-
-## Project Architecture
-
-Textara follows a clean layered architecture:
-
-```
-lib/
-  core/                     # Shared constants, theme, utilities
-    constants/              # App-wide constants and enums
-    theme/                  # Theme system (8 built-in themes + a11y overlays)
-  domain/                   # Business logic layer
-    entities/               # Pure Dart models (Book, Highlight, Bookmark, etc.)
-    repositories/           # Repository interfaces (e.g. LibraryRepository)
-  data/                     # Data layer implementation
-    database/               # SQLite via sqflite (DAOs for books, annotations, collections)
-    repositories/           # Repository implementations (SqliteLibraryRepository)
-    services/               # File storage, EPUB parsing, import/export
-  presentation/             # UI layer
-    providers/              # Riverpod providers split by feature (+ app_providers barrel)
-    screens/                # Full-page screens (library, reader, settings, onboarding)
-    widgets/                # Reusable UI components
-```
-
-See [PLAN.md](PLAN.md) for the free, premium-quality upgrade roadmap.
-
-### Key Architectural Decisions
-
-| Decision | Choice | Rationale |
-|---|---|---|
-| **State management** | Riverpod | Type-safe, testable, no BuildContext dependency for providers |
-| **Database** | sqflite (SQLite) | No code generation needed, mature, excellent mobile support, handles 5000+ books |
-| **EPUB parsing** | epubx | Pure Dart, no platform channels, parses metadata + content + covers |
-| **PDF rendering** | pdfrx | Hardware-accelerated, supports text selection, smooth scrolling |
-| **EPUB rendering** | Custom PageView + SelectableText | Full control over typography, themes, and accessibility; avoids WebView overhead |
-| **Theming** | Custom AppTheme entity + Material 3 | 8 handcrafted themes including OLED black, sepia, high contrast |
-| **Search** | SQLite LIKE queries + FTS table | Full-text EPUB content indexed at import time, metadata search for library |
-| **Export** | pdf package + raw Markdown | Highlights export to both .md and .pdf with no network dependency |
-
-### EPUB Rendering Tradeoffs
-
-We render EPUB content using Flutter-native widgets (PageView + SelectableText) rather than a WebView approach:
-
-- **Advantages**: Full theme control, native text selection, accessibility support, no WebView overhead, consistent behaviour across platforms, deep integration with reader settings
-- **Tradeoffs**: Complex CSS in EPUBs (tables, SVG, complex layouts) may not render perfectly. For the vast majority of prose-heavy books, this approach is superior in performance and UX.
-
-## Features
-
-### Library
-- Grid and list view toggle
-- Sort by title, author, date added, recently opened, progress
-- Search across title, author, tags, and EPUB full text
-- Favourites, tags, collections, reading status tracking
-- Import via file picker (EPUB and PDF)
-
-### Reader
-- EPUB: paginated chapter view with full typography controls
-- PDF: hardware-accelerated viewer with text selection
-- Font family selection (8 fonts including Atkinson Hyperlegible)
-- Font size, line height, margin, alignment, and hyphenation controls
-- Bookmarks, table of contents, reading progress with time estimates
-
-### Annotations
-- Highlights with 8 colour choices
-- Notes attached to highlights
-- View all highlights and notes per book
-- Export to Markdown and PDF
-
-### Themes and Accessibility
-- 8 built-in themes: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Ember
-- Reduced motion mode
-- High contrast mode
-- Dyslexia-friendly mode (font + spacing)
-- Low stimulation mode (muted colours, no animations)
-- Full accessibility labels on all controls
-- Respects system text scaling
-
-### Data
-- Export/import full backup as JSON (books, highlights, bookmarks, collections)
-- Validates imported data carefully
-- No account required, no network dependency
-
-## Testing
-
-```bash
-# Run all tests
-flutter test
-
-# Run unit tests only
-flutter test test/unit/
-
-# Run widget tests only
-flutter test test/widget/
-```
-
-### Test Coverage
-
-- **Unit tests**: Book entity serialisation, reading progress persistence, highlight/note creation and export formatting, backup validation and failure cases, reader settings serialisation
-- **Widget tests**: Library empty state, book grid/list tiles, theme switching updates reader, favourite toggling
-
-## Phased Roadmap
-
-### MVP v1.0 (Current)
-- EPUB and PDF import and reading
-- Library with grid/list, search, sort, favourites
-- Reader with typography controls and 8 themes
-- Bookmarks, highlights, notes
-- Export highlights to Markdown and PDF
-- Backup/restore library data
-- Onboarding flow
-- Accessibility modes (reduced motion, high contrast, dyslexia, low stimulation)
-
-### Next (all free — see PLAN.md)
-- Text-to-speech for EPUB (play, pause, speed, voice selection)
-- Dictionary lookup (long-press to define, offline where possible)
-- Drag-and-drop / share-to-Textara import
-- Collections management UI and metadata editing
-- Richer Idea Threads workspace and local insights
-- Reading statistics, home-screen widget, tablet two-pane layout
-- Optional user-hosted sync only if designed later — **no accounts, no paywall, no Pro tier**
-
-Run local quality checks with `./tool/check.sh` (format, analyze, test). CI mirrors this on every PR via `.github/workflows/flutter-ci.yml`.
-
-## Store Listing Draft
+## Store listing
 
 **Textara: Your Books, Beautifully Read**
 
@@ -170,18 +10,126 @@ Textara is a thoughtfully crafted reading app for your DRM-free EPUB and PDF lib
 
 Import your books and enjoy a premium reading experience with deep customisation: choose from 8 handcrafted themes, adjust typography to your preference, and read comfortably with accessibility modes designed for every reader.
 
-Highlight passages, write notes, and export your annotations to Markdown or PDF. Keep your entire library organised with collections, tags, favourites, and powerful search.
+Highlight passages, write notes, and weave Idea Threads across books. Export annotations to Markdown or PDF. Keep your library organised with collections, tags, favourites, and powerful search.
 
 Your books stay on your device. Your data belongs to you.
 
 **Key features:**
 - Read DRM-free EPUB and PDF files
-- 8 beautiful reading themes including OLED black and sepia
+- 8 reading themes including OLED black and sepia
 - Full typography controls: font, size, spacing, alignment
 - Highlights with colour choices and attached notes
+- Idea Threads with local insights (no cloud AI)
+- Text-to-speech for EPUB
 - Export annotations to Markdown and PDF
-- Accessibility first: dyslexia-friendly, reduced motion, high contrast, low stimulation modes
+- Accessibility first: dyslexia-friendly, reduced motion, high contrast, low stimulation
 - Fully offline, no account required
-- Backup and restore your entire library
+- Backup and restore (optional passphrase encryption)
 
 Built with care in Great Britain.
+
+Store submission checklist: [docs/release/store-readiness.md](docs/release/store-readiness.md). Privacy claims: [docs/release/privacy-and-data.md](docs/release/privacy-and-data.md).
+
+## Setup
+
+### Prerequisites
+
+- Flutter SDK (stable channel, 3.11+)
+- Dart SDK 3.11+
+- Xcode (for iOS) or Android Studio (for Android)
+
+### Steps
+
+```bash
+cd textara
+flutter pub get
+flutter run
+flutter test
+./tool/check.sh   # format + analyze + unit/widget/a11y + knowledge-loop smoke
+```
+
+Release builds:
+
+```bash
+# Android (set TEXTARA_UPLOAD_* for Play signing — see docs/release/release-signing.md)
+flutter build appbundle --release --obfuscate --split-debug-info=build/debug-info
+
+# iOS
+flutter build ipa --release
+```
+
+Regenerate launcher / splash masters:
+
+```bash
+python3 tool/generate_brand_assets.py
+# optional:
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
+```
+
+## Architecture
+
+```
+lib/
+  core/                     # Constants, theme tokens, local error log
+  domain/                   # Entities, repository interfaces, local services
+  data/                     # SQLite DAOs, repositories, import/export/security
+  presentation/             # Riverpod providers, screens, widgets
+```
+
+See [PLAN.md](PLAN.md) for the free premium-quality roadmap (Milestones 1–8). Schema notes: [docs/architecture/schema.md](docs/architecture/schema.md).
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| **State management** | Riverpod | Type-safe, testable |
+| **Database** | sqflite (SQLite) | Mature, offline, FTS-friendly |
+| **EPUB parsing** | epub_pro | Metadata + content + covers |
+| **PDF rendering** | pdfrx | Hardware-accelerated |
+| **EPUB rendering** | PageView + SelectableText | Typography / a11y control without WebView |
+| **Theming** | AppTheme + Material 3 | 8 themes + a11y overlays |
+| **Export** | pdf + Markdown | Offline annotation portability |
+
+## Features
+
+### Library
+- Grid / list, sort, favourites, tags, collections, reading status
+- Search across metadata and EPUB full text
+- Import via picker, share intents, or document open
+
+### Reader
+- EPUB pagination with typography controls and chapter cache
+- PDF viewer with selection
+- Bookmarks, TOC, throttled progress, TTS
+
+### Annotations & Idea Threads
+- Highlights (8 colours) with notes
+- Cross-book Idea Threads, reorder, local insight chips
+- Export to Markdown and PDF
+
+### Themes and accessibility
+- Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Ember
+- Reduced motion, high contrast, OpenDyslexic, low stimulation
+- Semantics / large-text coverage gated in CI
+
+### Data & trust
+- JSON backup / restore (optional encryption)
+- No accounts, no required network, no default trackers
+- Local diagnostics export only
+
+## Testing
+
+```bash
+flutter test
+flutter test test/unit/
+flutter test test/widget/
+flutter test test/a11y/
+flutter test integration_test/knowledge_loop_smoke_test.dart -d flutter-tester
+```
+
+CI runs format, analyze, tests, and the knowledge-loop smoke on every PR (`.github/workflows/flutter-ci.yml`).
+
+## Roadmap
+
+Milestones 1–8 in [PLAN.md](PLAN.md) define the free product: architecture spine, reader quality, design system, Idea Threads, productivity (TTS / share / stats), offline security, a11y quality gates, and store readiness.
+
+**Non-goals forever for this plan:** subscriptions, freemium gates, mandatory cloud sync, ads, or Pro upsell UI.
