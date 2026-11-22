@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:textara/core/constants/enums.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
@@ -144,6 +145,17 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Added to Idea Thread')));
+  }
+
+  Future<void> _shareHighlight(Highlight highlight) async {
+    final buffer = StringBuffer()
+      ..writeln('> ${highlight.selectedText}')
+      ..writeln()
+      ..writeln('— ${widget.bookTitle}');
+    if (highlight.hasNote) {
+      buffer.writeln('Note: ${highlight.note}');
+    }
+    await Share.share(buffer.toString(), subject: widget.bookTitle);
   }
 
   Future<void> _deleteHighlightWithUndo(Highlight highlight) async {
@@ -375,6 +387,12 @@ class _AnnotationsSheetState extends ConsumerState<AnnotationsSheet>
                       fontSize: 11,
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.ios_share_outlined),
+                  iconSize: 18,
+                  tooltip: 'Share snippet',
+                  onPressed: () => _shareHighlight(highlight),
                 ),
                 IconButton(
                   icon: const Icon(Icons.account_tree_outlined),

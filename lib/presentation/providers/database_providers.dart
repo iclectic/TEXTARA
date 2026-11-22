@@ -4,6 +4,7 @@ import 'package:textara/data/database/book_dao.dart';
 import 'package:textara/data/database/collection_dao.dart';
 import 'package:textara/data/database/database_helper.dart';
 import 'package:textara/data/database/idea_thread_dao.dart';
+import 'package:textara/data/database/reading_stats_dao.dart';
 import 'package:textara/data/repositories/sqlite_backup_repository.dart';
 import 'package:textara/data/repositories/sqlite_library_repository.dart';
 import 'package:textara/data/services/epub_chapter_cache.dart';
@@ -11,8 +12,10 @@ import 'package:textara/data/services/epub_parser_service.dart';
 import 'package:textara/data/services/export_service.dart';
 import 'package:textara/data/services/file_storage_service.dart';
 import 'package:textara/data/services/import_service.dart';
+import 'package:textara/data/services/reading_reminder_service.dart';
 import 'package:textara/domain/repositories/backup_repository.dart';
 import 'package:textara/domain/repositories/library_repository.dart';
+import 'package:textara/domain/services/dictionary_lookup.dart';
 
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
   return DatabaseHelper();
@@ -70,4 +73,20 @@ final exportServiceProvider = Provider<ExportService>((ref) {
 
 final backupRepositoryProvider = Provider<BackupRepository>((ref) {
   return SqliteBackupRepository(ref.watch(exportServiceProvider));
+});
+
+final readingStatsDaoProvider = Provider<ReadingStatsDao>((ref) {
+  return ReadingStatsDao(ref.watch(databaseHelperProvider));
+});
+
+final readingReminderServiceProvider = Provider<ReadingReminderService>((ref) {
+  return ReadingReminderService();
+});
+
+final dictionaryLookupProvider = Provider<DictionaryLookup>((ref) {
+  return const DictionaryLookup();
+});
+
+final readingStatsProvider = FutureProvider.autoDispose((ref) async {
+  return ref.watch(readingStatsDaoProvider).getStats();
 });

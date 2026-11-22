@@ -47,7 +47,10 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
   @override
   void initState() {
     super.initState();
-    widget.controller?.attach(_jumpToChapterIndex);
+    widget.controller?.attach(
+      _jumpToChapterIndex,
+      currentChapterText: _currentChapterText,
+    );
     _loadEpub();
   }
 
@@ -56,8 +59,16 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller?.detach();
-      widget.controller?.attach(_jumpToChapterIndex);
+      widget.controller?.attach(
+        _jumpToChapterIndex,
+        currentChapterText: _currentChapterText,
+      );
     }
+  }
+
+  String _currentChapterText() {
+    if (_chapters.isEmpty) return '';
+    return _chapters[_currentChapterIndex.clamp(0, _chapters.length - 1)].text;
   }
 
   @override
@@ -426,7 +437,7 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
               final selection = value.selection;
               final selectedText = selection.textInside(value.text);
               final buttonItems = <ContextMenuButtonItem>[
-                if (selectedText.trim().isNotEmpty)
+                if (selectedText.trim().isNotEmpty) ...[
                   ContextMenuButtonItem(
                     label: 'Highlight',
                     onPressed: () {
@@ -439,6 +450,38 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
                       );
                     },
                   ),
+                  ContextMenuButtonItem(
+                    label: 'Define',
+                    onPressed: () async {
+                      editableTextState.hideToolbar();
+                      final word = selectedText
+                          .trim()
+                          .split(RegExp(r'\s+'))
+                          .first;
+                      final result = await ref
+                          .read(dictionaryLookupProvider)
+                          .define(word);
+                      if (!context.mounted) return;
+                      await showDialog<void>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(result.word),
+                          content: Text(
+                            result.available
+                                ? (result.definition ?? '')
+                                : result.message,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 ...editableTextState.contextMenuButtonItems,
               ];
               return AdaptiveTextSelectionToolbar.buttonItems(

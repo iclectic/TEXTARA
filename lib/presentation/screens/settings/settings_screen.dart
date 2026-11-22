@@ -19,6 +19,8 @@ class SettingsScreen extends ConsumerWidget {
     final dyslexiaMode = ref.watch(dyslexiaModeProvider);
     final lowStimulation = ref.watch(lowStimulationProvider);
     final threadInsights = ref.watch(threadInsightsEnabledProvider);
+    final readingReminder = ref.watch(readingReminderEnabledProvider);
+    final statsAsync = ref.watch(readingStatsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -89,6 +91,41 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (_) {
               HapticFeedback.selectionClick();
               ref.read(threadInsightsEnabledProvider.notifier).toggle();
+            },
+          ),
+          const Divider(height: 32),
+
+          _SectionHeader(title: 'Reading insights'),
+          statsAsync.when(
+            data: (stats) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                '${stats.totalMinutesRead} min read · '
+                '${stats.booksFinished} finished · '
+                '${stats.highlightCount} highlights · '
+                '${stats.booksInLibrary} in library',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            loading: () => const LinearProgressIndicator(),
+            error: (e, _) => ListTile(title: Text('Stats unavailable: $e')),
+          ),
+          SwitchListTile(
+            title: const Text('Daily reading reminder'),
+            subtitle: const Text(
+              'Off by default. Local notification only — never marketing.',
+            ),
+            value: readingReminder,
+            onChanged: (_) async {
+              HapticFeedback.selectionClick();
+              final next = !readingReminder;
+              await ref.read(readingReminderEnabledProvider.notifier).set(next);
+              final reminders = ref.read(readingReminderServiceProvider);
+              if (next) {
+                await reminders.scheduleDaily(hour: 20, minute: 0);
+              } else {
+                await reminders.cancel();
+              }
             },
           ),
           const Divider(height: 32),
