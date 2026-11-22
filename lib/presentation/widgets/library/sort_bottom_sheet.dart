@@ -78,7 +78,7 @@ class SortBottomSheet extends ConsumerWidget {
                 ),
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  ref.read(librarySortProvider.notifier).state = field;
+                  ref.read(librarySortProvider.notifier).set(field);
                 },
               );
             }),
@@ -106,10 +106,11 @@ class SortBottomSheet extends ConsumerWidget {
                     ),
                   ],
                   selected: {currentOrder},
-                  onSelectionChanged: (set) {
+                  onSelectionChanged: (selection) {
                     HapticFeedback.selectionClick();
-                    ref.read(librarySortOrderProvider.notifier).state =
-                        set.first;
+                    ref
+                        .read(librarySortOrderProvider.notifier)
+                        .set(selection.first);
                   },
                 ),
               ],

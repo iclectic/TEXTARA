@@ -37,4 +37,7 @@ class AppConstants {
 
   static const String backupFileExtension = 'textara';
   static const String backupMimeType = 'application/json';
+
+  /// Bundled sample EPUB used by onboarding ("Get started with a sample book").
+  static const String sampleBookAsset = 'assets/sample/welcome_to_textara.epub';
 }
