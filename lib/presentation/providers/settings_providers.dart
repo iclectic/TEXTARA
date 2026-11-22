@@ -66,16 +66,27 @@ final lowStimulationProvider = StateNotifierProvider<BoolSettingNotifier, bool>(
   },
 );
 
+/// Opt-in local Idea Thread suggestions (default on).
+final threadInsightsEnabledProvider =
+    StateNotifierProvider<BoolSettingNotifier, bool>((ref) {
+      return BoolSettingNotifier(
+        AppConstants.prefKeyThreadInsights,
+        defaultValue: true,
+      );
+    });
+
 class BoolSettingNotifier extends StateNotifier<bool> {
   final String _prefKey;
+  final bool defaultValue;
 
-  BoolSettingNotifier(this._prefKey) : super(false) {
+  BoolSettingNotifier(this._prefKey, {this.defaultValue = false})
+    : super(defaultValue) {
     _load();
   }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(_prefKey) ?? false;
+    state = prefs.getBool(_prefKey) ?? defaultValue;
   }
 
   Future<void> toggle() async {

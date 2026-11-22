@@ -5,6 +5,7 @@ import 'package:textara/core/constants/enums.dart';
 import 'package:textara/data/services/epub_chapter_cache.dart';
 import 'package:textara/domain/entities/annotation.dart';
 import 'package:textara/domain/entities/book.dart';
+import 'package:textara/domain/entities/idea_thread.dart';
 import 'package:textara/domain/entities/reader_settings.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/reader/epub_reader_controller.dart';
@@ -229,28 +230,71 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
 
     try {
       await ref.read(annotationDaoProvider).insertHighlight(highlight);
-      if (draft.threadId != null) {
-        await ref
+      var threadMessage = '';
+      var threadId = draft.threadId;
+      if (draft.createNewThread) {
+        final thread = IdeaThread(
+          id: '${now.microsecondsSinceEpoch}_thread',
+          title: draft.newThreadTitle?.trim().isNotEmpty == true
+              ? draft.newThreadTitle!.trim()
+              : 'Idea from highlight',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await ref.read(ideaThreadDaoProvider).insertThread(thread);
+        threadId = thread.id;
+      }
+      if (threadId != null) {
+        final inserted = await ref
             .read(ideaThreadDaoProvider)
             .addHighlightToThread(
-              threadId: draft.threadId!,
+              threadId: threadId,
               highlightId: highlight.id,
+              reflection: draft.threadReflection,
             );
         ref.invalidate(ideaThreadsProvider);
+        threadMessage = inserted
+            ? ' · added to thread'
+            : ' · already in thread';
       }
       ref.invalidate(bookHighlightsProvider(widget.book.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Highlight saved'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text('Highlight saved$threadMessage'),
+          duration: const Duration(seconds: 2),
+          action: threadId == null
+              ? null
+              : SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () async {
+                    await ref
+                        .read(ideaThreadDaoProvider)
+                        .removeHighlightFromThread(
+                          threadId: threadId!,
+                          highlightId: highlight.id,
+                        );
+                    ref.invalidate(ideaThreadsProvider);
+                  },
+                ),
         ),
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not save highlight')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Could not save highlight'),
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: () => _createHighlight(
+              selectedText: selectedText,
+              chapter: chapter,
+              startOffset: startOffset,
+              endOffset: endOffset,
+            ),
+          ),
+        ),
+      );
     }
   }
 
