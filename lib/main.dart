@@ -7,8 +7,8 @@ import 'package:textara/core/errors/local_error_log.dart';
 import 'package:textara/core/theme/leaf_theme.dart';
 import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
-import 'package:textara/presentation/screens/library/library_screen.dart';
 import 'package:textara/presentation/screens/onboarding/onboarding_screen.dart';
+import 'package:textara/presentation/screens/shell/app_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,7 +86,7 @@ class _TextaraAppState extends ConsumerState<TextaraApp> {
         highContrast: highContrast,
         lowStimulation: lowStimulation,
       ),
-      home: _isFirstRun ? const OnboardingScreen() : const LibraryScreen(),
+      home: _isFirstRun ? const OnboardingScreen() : const AppShell(),
     );
   }
 }

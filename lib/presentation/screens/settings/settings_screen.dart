@@ -7,7 +7,9 @@ import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  final bool embeddedInShell;
+
+  const SettingsScreen({super.key, this.embeddedInShell = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,7 +20,10 @@ class SettingsScreen extends ConsumerWidget {
     final lowStimulation = ref.watch(lowStimulationProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        automaticallyImplyLeading: !embeddedInShell,
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [

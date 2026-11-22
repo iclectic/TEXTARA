@@ -61,3 +61,7 @@ flutter:
   assets:
     - assets/
     - assets/sample/
+  fonts:
+    - family: OpenDyslexic
+      fonts:
+        - asset: assets/fonts/OpenDyslexic-Regular.otf

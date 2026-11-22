@@ -5,7 +5,9 @@ import 'package:textara/domain/entities/idea_thread.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 
 class IdeaThreadsScreen extends ConsumerWidget {
-  const IdeaThreadsScreen({super.key});
+  final bool embeddedInShell;
+
+  const IdeaThreadsScreen({super.key, this.embeddedInShell = false});
 
   Future<void> _createThread(BuildContext context, WidgetRef ref) async {
     final thread = await showDialog<IdeaThread>(
@@ -23,7 +25,10 @@ class IdeaThreadsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Idea Threads')),
+      appBar: AppBar(
+        title: const Text('Idea Threads'),
+        automaticallyImplyLeading: !embeddedInShell,
+      ),
       body: threadsAsync.when(
         data: (threads) => threads.isEmpty
             ? _EmptyThreadsState(onCreate: () => _createThread(context, ref))

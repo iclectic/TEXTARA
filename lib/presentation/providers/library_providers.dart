@@ -91,6 +91,14 @@ class LibrarySortOrderNotifier extends StateNotifier<SortOrder> {
 
 final librarySearchQueryProvider = StateProvider<String>((ref) => '');
 
+/// Library browse filters (independent of full-text search).
+final libraryFavouritesOnlyProvider = StateProvider<bool>((ref) => false);
+final libraryStatusFilterProvider = StateProvider<ReadingStatus?>(
+  (ref) => null,
+);
+final libraryFormatFilterProvider = StateProvider<BookFormat?>((ref) => null);
+final libraryCollectionFilterProvider = StateProvider<String?>((ref) => null);
+
 final booksProvider =
     StateNotifierProvider<BooksNotifier, AsyncValue<List<Book>>>((ref) {
       return BooksNotifier(ref.watch(libraryRepositoryProvider));
@@ -129,15 +137,37 @@ class BooksNotifier extends StateNotifier<AsyncValue<List<Book>>> {
   }
 }
 
-/// Browse mode: sorted library when the search box is empty.
+/// Browse mode: filtered + sorted library when the search box is empty.
 final filteredBooksProvider = Provider<List<Book>>((ref) {
   final booksAsync = ref.watch(booksProvider);
   final sortField = ref.watch(librarySortProvider);
   final sortOrder = ref.watch(librarySortOrderProvider);
+  final favouritesOnly = ref.watch(libraryFavouritesOnlyProvider);
+  final statusFilter = ref.watch(libraryStatusFilterProvider);
+  final formatFilter = ref.watch(libraryFormatFilterProvider);
+  final collectionFilter = ref.watch(libraryCollectionFilterProvider);
 
   return booksAsync.when(
     data: (books) {
-      final filtered = List<Book>.from(books);
+      var filtered = List<Book>.from(books);
+      if (favouritesOnly) {
+        filtered = filtered.where((b) => b.isFavourite).toList();
+      }
+      if (statusFilter != null) {
+        filtered = filtered
+            .where((b) => b.readingStatus == statusFilter)
+            .toList();
+      }
+      if (formatFilter != null) {
+        filtered = filtered.where((b) => b.format == formatFilter).toList();
+      }
+      if (collectionFilter != null) {
+        final ids = ref.watch(collectionBookIdsProvider(collectionFilter));
+        final allowed = ids.valueOrNull;
+        if (allowed != null) {
+          filtered = filtered.where((b) => allowed.contains(b.id)).toList();
+        }
+      }
       filtered.sort((a, b) {
         final int cmp;
         switch (sortField) {
@@ -161,6 +191,13 @@ final filteredBooksProvider = Provider<List<Book>>((ref) {
     loading: () => const [],
     error: (error, stackTrace) => const [],
   );
+});
+
+final collectionBookIdsProvider = FutureProvider.family<List<String>, String>((
+  ref,
+  collectionId,
+) async {
+  return ref.watch(collectionDaoProvider).getBookIdsForCollection(collectionId);
 });
 
 /// Debounced full-text + metadata search via [LibraryRepository.search].

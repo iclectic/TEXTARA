@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
-import 'package:textara/presentation/screens/library/library_screen.dart';
+import 'package:textara/presentation/screens/shell/app_shell.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -26,7 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (!mounted) return;
     await Navigator.of(
       context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const LibraryScreen()));
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const AppShell()));
   }
 
   Future<void> _importSample() async {
