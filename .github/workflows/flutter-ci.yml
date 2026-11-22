@@ -29,5 +29,8 @@ jobs:
         # Infos alone must not fail the job (Flutter 3.50+ exits 1 on infos by default).
         run: flutter analyze --no-fatal-infos --fatal-warnings
 
-      - name: Test
+      - name: Unit, widget, and a11y tests
         run: flutter test
+
+      - name: Knowledge-loop smoke (integration_test, flutter-tester)
+        run: flutter test integration_test/knowledge_loop_smoke_test.dart -d flutter-tester

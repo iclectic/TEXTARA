@@ -15,4 +15,7 @@ flutter analyze --no-fatal-infos --fatal-warnings
 echo "==> flutter test"
 flutter test
 
+echo "==> integration smoke"
+flutter test integration_test/knowledge_loop_smoke_test.dart -d flutter-tester
+
 echo "==> All checks passed"
