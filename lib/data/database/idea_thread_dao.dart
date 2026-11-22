@@ -11,6 +11,17 @@ class IdeaThreadDao {
 
   Future<Database> get _db => _dbHelper.database;
 
+  Map<String, dynamic> toMapForTransaction(IdeaThread thread) =>
+      _threadToMap(thread);
+
+  Map<String, dynamic> linkToMapForTransaction(ThreadHighlightLink link) => {
+    'thread_id': link.threadId,
+    'highlight_id': link.highlightId,
+    'reflection': link.reflection,
+    'sort_order': link.sortOrder,
+    'added_at': link.addedAt.toIso8601String(),
+  };
+
   Map<String, dynamic> _threadToMap(IdeaThread thread) => {
     'id': thread.id,
     'title': thread.title,

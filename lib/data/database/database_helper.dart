@@ -1,6 +1,7 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -8,6 +9,9 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+
+  /// Current schema version written by [openDatabase].
+  static const int schemaVersion = 2;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -18,18 +22,26 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final dir = await getApplicationDocumentsDirectory();
     final path = p.join(dir.path, 'textara.db');
-    return await openDatabase(
+    return openAtPath(path);
+  }
+
+  /// Opens a database at [path] using the production schema callbacks.
+  /// Exposed for migration tests (`sqflite_common_ffi`).
+  @visibleForTesting
+  Future<Database> openAtPath(String path, {int version = schemaVersion}) {
+    return openDatabase(
       path,
-      version: 2,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      version: version,
+      onCreate: onCreate,
+      onUpgrade: onUpgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
     );
   }
 
-  Future<void> _onCreate(Database db, int version) async {
+  @visibleForTesting
+  Future<void> onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE books (
         id TEXT PRIMARY KEY,
@@ -125,7 +137,8 @@ class DatabaseHelper {
     await _createIdeaThreadTables(db);
   }
 
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  @visibleForTesting
+  Future<void> onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createIdeaThreadTables(db);
     }

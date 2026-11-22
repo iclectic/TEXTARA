@@ -11,6 +11,9 @@ class BookDao {
 
   Future<Database> get _db => _dbHelper.database;
 
+  /// Public for transactional backup restore.
+  Map<String, dynamic> toMapForTransaction(Book book) => _bookToMap(book);
+
   Map<String, dynamic> _bookToMap(Book book) => {
     'id': book.id,
     'title': book.title,
