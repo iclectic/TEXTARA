@@ -32,7 +32,6 @@ dependencies:
   pdfrx: ^2.2.15
 
   # UI and design
-  google_fonts: ^6.2.1
   shimmer: ^3.0.0
 
   # Utils
@@ -41,7 +40,6 @@ dependencies:
   collection: ^1.19.1
   equatable: ^2.0.7
   shared_preferences: ^2.3.4
-  permission_handler: ^11.3.1
 
   # TTS
   flutter_tts: ^4.2.0
@@ -90,7 +88,32 @@ flutter:
     - assets/
     - assets/sample/
     - assets/branding/
+    - assets/fonts/licenses/
   fonts:
     - family: OpenDyslexic
       fonts:
         - asset: assets/fonts/OpenDyslexic-Regular.otf
+    - family: Literata
+      fonts:
+        - asset: assets/fonts/Literata-Regular.ttf
+    - family: Merriweather
+      fonts:
+        - asset: assets/fonts/Merriweather-Regular.ttf
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/Lora-Regular.ttf
+    - family: Source Serif Pro
+      fonts:
+        - asset: assets/fonts/SourceSerif4-Regular.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+    - family: Open Sans
+      fonts:
+        - asset: assets/fonts/OpenSans-Regular.ttf
+    - family: Atkinson Hyperlegible
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegible-Regular.ttf

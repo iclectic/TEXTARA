@@ -6,6 +6,25 @@
 
 **Related prior art:** An earlier engineering plan lives at `docs/plans/2026-07-21-001-feat-premium-reader-platform-plan.md`. This document supersedes it as the living root roadmap: it is grounded in the current tree, expands quality/release topics, and explicitly excludes monetization and paid sync tiers mentioned in `README.md`.
 
+## Implementation status
+
+Section 0 is the baseline this plan started from. It is not a description of the current tree.
+
+Milestones 1–8 are implemented. The gaps that were only declared in manifests or comments are now wired through:
+
+- Share, Open In, and macOS drag-and-drop copy EPUB/PDF files into the importer. `textara://book/<id>` opens a book already in the library. iPad can also drop an EPUB or PDF onto the running window.
+- Tablets (`shortestSide >= 600`) show the library beside the reader, and the threads list beside the thread. Phones keep a single column and a full-screen reader.
+- Reader fonts are bundled (Literata, Merriweather, Lora, Source Serif 4, Inter, Roboto, Open Sans, Atkinson Hyperlegible, OpenDyslexic). `google_fonts` and the unused `permission_handler` dependency are gone.
+
+Evaluated and left as they are:
+
+- Full-text search stays on the plain `full_text_search` table with `LIKE` and Dart ranking. See `docs/architecture/schema.md`.
+- Navigation stays in `AppShell` with imperative reader routes. A `go_router` migration was not required once deep links and share landing had a platform channel.
+- Dictionary lookup remains the offline stub in Milestone 5.2.
+- A home-screen widget stays a later stretch.
+
+Still outside the repository, and still required before a store upload: phone and tablet screenshots, the store listings, and a signed Android AAB plus iOS archive. See Immediate Next Actions.
+
 ---
 
 ## 0. Current State Inventory
@@ -520,12 +539,11 @@ Milestones 2–4 deliver user-visible “premium” feel. 5–6 deepen usefulnes
 
 ## Immediate Next Actions (start here)
 
-Milestones 1–8 of this plan are implemented in tree. Remaining human/store steps:
+Milestones 1–8 of this plan are implemented in tree, including the sample EPUB at `assets/sample/welcome_to_textara.epub`. Remaining human/store steps:
 
-1. Capture phone + tablet screenshots and preview video (`docs/release/screenshots/`).
+1. Capture phone + tablet screenshots and preview video (`docs/release/screenshots/`). The tablet shot should show the library beside the reader.
 2. Configure Play / App Store Connect listings from the README store draft.
 3. Build signed Android AAB + iOS Archive with release credentials (`docs/release/release-signing.md`).
-4. Optional: replace onboarding sample `.gitkeep` with a redistributable DRM-free EPUB when licensing allows.
 
 ---
 

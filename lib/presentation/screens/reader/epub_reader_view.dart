@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:textara/core/constants/enums.dart';
 import 'package:textara/data/services/epub_chapter_cache.dart';
 import 'package:textara/domain/entities/annotation.dart';
@@ -158,21 +157,11 @@ class _EpubReaderViewState extends ConsumerState<EpubReaderView> {
       );
     }
 
-    TextStyle base;
-    try {
-      base = GoogleFonts.getFont(
-        settings.fontFamily,
-        fontSize: settings.fontSize,
-        height: settings.lineHeight,
-      );
-    } catch (_) {
-      base = TextStyle(
-        fontSize: settings.fontSize,
-        height: settings.lineHeight,
-      );
-    }
-
-    return base;
+    return TextStyle(
+      fontFamily: settings.fontFamily,
+      fontSize: settings.fontSize,
+      height: settings.lineHeight,
+    );
   }
 
   TextAlign _getTextAlign() {

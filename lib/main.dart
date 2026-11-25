@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:textara/core/constants/app_constants.dart';
 import 'package:textara/core/errors/local_error_log.dart';
@@ -10,11 +9,10 @@ import 'package:textara/domain/entities/app_theme.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:textara/presentation/screens/shell/app_shell.dart';
+import 'package:textara/presentation/widgets/shell/incoming_import_host.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Prefer bundled fonts offline; never block reading on network font fetch.
-  GoogleFonts.config.allowRuntimeFetching = false;
   LocalErrorLog.installHooks();
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -89,7 +87,9 @@ class _TextaraAppState extends ConsumerState<TextaraApp> {
         highContrast: highContrast,
         lowStimulation: lowStimulation,
       ),
-      home: _isFirstRun ? const OnboardingScreen() : const AppShell(),
+      home: IncomingImportHost(
+        child: _isFirstRun ? const OnboardingScreen() : const AppShell(),
+      ),
     );
   }
 }

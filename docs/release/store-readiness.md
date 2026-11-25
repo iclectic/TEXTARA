@@ -46,7 +46,7 @@ Required captures (phone + tablet where noted): see [screenshots/README.md](scre
 - [ ] Phone: library grid
 - [ ] Phone: reader (typography + theme)
 - [ ] Phone: Idea Threads
-- [ ] Tablet: two-pane / wide library
+- [ ] Tablet: two-pane library + reader, and threads list + detail (layout is in the app; this box is the store screenshot)
 - [ ] Short preview video: import → read → highlight → thread
 
 ## Versioning

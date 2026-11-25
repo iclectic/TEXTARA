@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:textara/core/constants/enums.dart';
+import 'package:textara/core/layout/textara_layout.dart';
 import 'package:textara/domain/entities/book.dart';
 import 'package:textara/domain/entities/search_result.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
@@ -30,11 +31,37 @@ class LibraryScreen extends ConsumerStatefulWidget {
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  Book? _paneBook;
+  String? _paneChapterId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _consumePendingOpen();
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _consumePendingOpen() {
+    final pending = ref.read(pendingReaderOpenProvider);
+    if (pending == null || !mounted) return;
+    ref.read(pendingReaderOpenProvider.notifier).state = null;
+    unawaited(_openBook(pending.book, chapterId: pending.chapterId));
+  }
+
+  void _closeReaderPane() {
+    setState(() {
+      _paneBook = null;
+      _paneChapterId = null;
+    });
+    ref.read(libraryReaderPaneOpenProvider.notifier).state = false;
   }
 
   Future<void> _importBooks() async {
@@ -156,6 +183,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
     await ref.read(libraryRepositoryProvider).updateLastOpened(book.id);
     if (!mounted) return;
+    if (isTextaraTablet(MediaQuery.sizeOf(context))) {
+      setState(() {
+        _paneBook = book;
+        _paneChapterId = chapterId;
+      });
+      ref.read(libraryReaderPaneOpenProvider.notifier).state = true;
+      return;
+    }
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ReaderScreen(book: book, initialChapterId: chapterId),
@@ -190,10 +225,38 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final isSearching = _isSearching && searchQuery.isNotEmpty;
     final isLoading = booksState is AsyncLoading;
     final importProgress = ref.watch(importProgressProvider);
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.shortestSide >= 600;
+    final isTablet = isTextaraTablet(MediaQuery.sizeOf(context));
 
-    return Scaffold(
+    ref.listen<PendingReaderOpen?>(pendingReaderOpenProvider, (previous, next) {
+      if (next == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _consumePendingOpen();
+      });
+    });
+    ref.listen<bool>(libraryReaderPaneOpenProvider, (previous, next) {
+      if (!next &&
+          _paneBook != null &&
+          isTextaraTablet(MediaQuery.sizeOf(context))) {
+        setState(() {
+          _paneBook = null;
+          _paneChapterId = null;
+        });
+      }
+    });
+    final paneShouldBlockBack = isTablet && _paneBook != null;
+    if (ref.read(libraryReaderPaneOpenProvider) != paneShouldBlockBack) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final block =
+            isTextaraTablet(MediaQuery.sizeOf(context)) && _paneBook != null;
+        if (ref.read(libraryReaderPaneOpenProvider) != block) {
+          ref.read(libraryReaderPaneOpenProvider.notifier).state = block;
+        }
+      });
+    }
+
+    final library = Scaffold(
       appBar: AppBar(
         title: _isSearching ? _buildSearchField(theme) : const Text('Library'),
         actions: [
@@ -300,7 +363,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ? _buildSearchBody(theme)
                 : books.isEmpty
                 ? LibraryEmptyState(onImport: _importBooks)
-                : _buildBooksList(books, viewMode, isTablet),
+                : _buildBooksList(books, viewMode),
           ),
         ],
       ),
@@ -313,6 +376,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               tooltip: 'Import books',
             )
           : null,
+    );
+
+    if (!isTablet) return library;
+
+    return Row(
+      children: [
+        Expanded(flex: 2, child: library),
+        const VerticalDivider(width: 1),
+        Expanded(
+          flex: 3,
+          child: _paneBook == null
+              ? const _ReaderPlaceholder()
+              : ReaderScreen(
+                  key: ValueKey('${_paneBook!.id}:${_paneChapterId ?? ''}'),
+                  book: _paneBook!,
+                  initialChapterId: _paneChapterId,
+                  onClose: _closeReaderPane,
+                ),
+        ),
+      ],
     );
   }
 
@@ -502,11 +585,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
-  Widget _buildBooksList(
-    List<Book> books,
-    LibraryViewMode viewMode,
-    bool isTablet,
-  ) {
+  Widget _buildBooksList(List<Book> books, LibraryViewMode viewMode) {
     final reduced = ref.watch(reducedMotionProvider);
     if (viewMode == LibraryViewMode.list) {
       return ListView.separated(
@@ -533,28 +612,63 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       );
     }
 
-    final crossAxisCount = isTablet ? 4 : 2;
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 0.62,
-      ),
-      itemCount: books.length,
-      itemBuilder: (context, index) {
-        return _Appear(
-          index: index,
-          reducedMotion: reduced,
-          child: BookGridTile(
-            book: books[index],
-            onTap: () => _openBook(books[index]),
-            onLongPress: () =>
-                showBookDetailsSheet(context: context, book: books[index]),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width >= 1100
+            ? 5
+            : width >= 800
+            ? 4
+            : width >= 520
+            ? 3
+            : 2;
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.62,
           ),
+          itemCount: books.length,
+          itemBuilder: (context, index) {
+            return _Appear(
+              index: index,
+              reducedMotion: reduced,
+              child: BookGridTile(
+                book: books[index],
+                onTap: () => _openBook(books[index]),
+                onLongPress: () =>
+                    showBookDetailsSheet(context: context, book: books[index]),
+              ),
+            );
+          },
         );
       },
+    );
+  }
+}
+
+class _ReaderPlaceholder extends StatelessWidget {
+  const _ReaderPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ColoredBox(
+      color: theme.colorScheme.surface,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            'Select a book to read',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
     );
   }
 }

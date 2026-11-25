@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:textara/core/layout/textara_layout.dart';
 import 'package:textara/domain/entities/idea_thread.dart';
 import 'package:textara/domain/services/thread_insights.dart';
 import 'package:textara/presentation/providers/app_providers.dart';
 import 'package:textara/presentation/screens/reader/reader_screen.dart';
 import 'package:uuid/uuid.dart';
 
-class IdeaThreadsScreen extends ConsumerWidget {
+class IdeaThreadsScreen extends ConsumerStatefulWidget {
   final bool embeddedInShell;
 
   const IdeaThreadsScreen({super.key, this.embeddedInShell = false});
 
-  Future<void> _createThread(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<IdeaThreadsScreen> createState() => _IdeaThreadsScreenState();
+}
+
+class _IdeaThreadsScreenState extends ConsumerState<IdeaThreadsScreen> {
+  String? _selectedId;
+
+  Future<void> _createThread() async {
     final thread = await showDialog<IdeaThread>(
       context: context,
       builder: (_) => const _ThreadEditorDialog(),
@@ -19,21 +27,62 @@ class IdeaThreadsScreen extends ConsumerWidget {
     if (thread == null) return;
     await ref.read(ideaThreadDaoProvider).insertThread(thread);
     ref.invalidate(ideaThreadsProvider);
+    if (!mounted) return;
+    setState(() => _selectedId = thread.id);
+    if (isTextaraTablet(MediaQuery.sizeOf(context))) {
+      ref.read(threadDetailPaneOpenProvider.notifier).state = true;
+    }
+  }
+
+  void _closeDetail() {
+    setState(() => _selectedId = null);
+    ref.read(threadDetailPaneOpenProvider.notifier).state = false;
+  }
+
+  void _openThread(IdeaThread thread, {required bool tablet}) {
+    if (tablet) {
+      setState(() => _selectedId = thread.id);
+      ref.read(threadDetailPaneOpenProvider.notifier).state = true;
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => IdeaThreadDetailScreen(thread: thread)),
+    );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final threadsAsync = ref.watch(ideaThreadsProvider);
     final theme = Theme.of(context);
+    final tablet = isTextaraTablet(MediaQuery.sizeOf(context));
 
-    return Scaffold(
+    ref.listen<bool>(threadDetailPaneOpenProvider, (previous, next) {
+      if (!next &&
+          _selectedId != null &&
+          isTextaraTablet(MediaQuery.sizeOf(context))) {
+        setState(() => _selectedId = null);
+      }
+    });
+    final paneShouldBlockBack = tablet && _selectedId != null;
+    if (ref.read(threadDetailPaneOpenProvider) != paneShouldBlockBack) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final block =
+            isTextaraTablet(MediaQuery.sizeOf(context)) && _selectedId != null;
+        if (ref.read(threadDetailPaneOpenProvider) != block) {
+          ref.read(threadDetailPaneOpenProvider.notifier).state = block;
+        }
+      });
+    }
+
+    final list = Scaffold(
       appBar: AppBar(
         title: const Text('Idea Threads'),
-        automaticallyImplyLeading: !embeddedInShell,
+        automaticallyImplyLeading: !widget.embeddedInShell,
       ),
       body: threadsAsync.when(
         data: (threads) => threads.isEmpty
-            ? _EmptyThreadsState(onCreate: () => _createThread(context, ref))
+            ? _EmptyThreadsState(onCreate: _createThread)
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: threads.length,
@@ -66,6 +115,7 @@ class IdeaThreadsScreen extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      selected: tablet && thread.id == _selectedId,
                       trailing: Text(
                         '${thread.evidenceCount}',
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -73,14 +123,7 @@ class IdeaThreadsScreen extends ConsumerWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                IdeaThreadDetailScreen(thread: thread),
-                          ),
-                        );
-                      },
+                      onTap: () => _openThread(thread, tablet: tablet),
                     ),
                   );
                 },
@@ -90,10 +133,42 @@ class IdeaThreadsScreen extends ConsumerWidget {
             const Center(child: Text('Could not load your idea threads.')),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createThread(context, ref),
+        onPressed: _createThread,
         icon: const Icon(Icons.add_rounded),
         label: const Text('New thread'),
       ),
+    );
+
+    if (!tablet) return list;
+
+    return threadsAsync.maybeWhen(
+      data: (threads) {
+        if (threads.isEmpty) return list;
+        IdeaThread? selected;
+        for (final thread in threads) {
+          if (thread.id == _selectedId) {
+            selected = thread;
+            break;
+          }
+        }
+        return Row(
+          children: [
+            Expanded(flex: 2, child: list),
+            const VerticalDivider(width: 1),
+            Expanded(
+              flex: 3,
+              child: selected == null
+                  ? const _ThreadPlaceholder()
+                  : IdeaThreadDetailScreen(
+                      key: ValueKey(selected.id),
+                      thread: selected,
+                      onClose: _closeDetail,
+                    ),
+            ),
+          ],
+        );
+      },
+      orElse: () => list,
     );
   }
 
@@ -110,10 +185,35 @@ class IdeaThreadsScreen extends ConsumerWidget {
   }
 }
 
+class _ThreadPlaceholder extends StatelessWidget {
+  const _ThreadPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ColoredBox(
+      color: theme.colorScheme.surface,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            'Select a thread to read its evidence',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class IdeaThreadDetailScreen extends ConsumerStatefulWidget {
   final IdeaThread thread;
+  final VoidCallback? onClose;
 
-  const IdeaThreadDetailScreen({super.key, required this.thread});
+  const IdeaThreadDetailScreen({super.key, required this.thread, this.onClose});
 
   @override
   ConsumerState<IdeaThreadDetailScreen> createState() =>
@@ -304,7 +404,12 @@ class _IdeaThreadDetailScreenState
     await ref.read(ideaThreadDaoProvider).deleteThread(_thread.id);
     if (!mounted) return;
     ref.invalidate(ideaThreadsProvider);
-    Navigator.of(context).pop();
+    final close = widget.onClose;
+    if (close != null) {
+      close();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -316,6 +421,14 @@ class _IdeaThreadDetailScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(_thread.title),
+        automaticallyImplyLeading: widget.onClose == null,
+        leading: widget.onClose == null
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.close_rounded),
+                tooltip: 'Close thread',
+                onPressed: widget.onClose,
+              ),
         actions: [
           IconButton(
             icon: const Icon(Icons.ios_share_rounded),

@@ -219,6 +219,21 @@ final librarySearchResultsProvider =
       return results;
     });
 
+/// Set when a shared file or `textara://book/<id>` should open the reader.
+class PendingReaderOpen {
+  final Book book;
+  final String? chapterId;
+
+  const PendingReaderOpen({required this.book, this.chapterId});
+}
+
+final pendingReaderOpenProvider = StateProvider<PendingReaderOpen?>(
+  (ref) => null,
+);
+
+/// True while the tablet library is showing a book beside the shelf.
+final libraryReaderPaneOpenProvider = StateProvider<bool>((ref) => false);
+
 final collectionsProvider = FutureProvider<List<Collection>>((ref) async {
   final dao = ref.watch(collectionDaoProvider);
   return dao.getAllCollections();

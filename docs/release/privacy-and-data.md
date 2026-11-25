@@ -20,7 +20,7 @@ Textara is a **local-first, free** reader. There is no account system and no req
 | Import / open / search / backup / export | No | Fully offline |
 | EPUB/PDF rendering | No | |
 | TTS | Device voices only | OS may download voices separately |
-| Google Fonts | **Disabled at runtime** | `GoogleFonts.config.allowRuntimeFetching = false`; OpenDyslexic is bundled |
+| Reader fonts | **No** | Literata, Merriweather, Lora, Source Serif 4, Inter, Roboto, Open Sans, Atkinson Hyperlegible, and OpenDyslexic are bundled. The app does not fetch fonts |
 | Crash / analytics SaaS | **Not included** | Local diagnostics export only |
 
 ## Diagnostics

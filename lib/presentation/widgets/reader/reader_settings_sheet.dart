@@ -69,7 +69,10 @@ class ReaderSettingsSheet extends ConsumerWidget {
                 final font = _fontFamilies[index];
                 final isSelected = settings.fontFamily == font && !dyslexia;
                 return ChoiceChip(
-                  label: Text(font, style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    font,
+                    style: TextStyle(fontSize: 12, fontFamily: font),
+                  ),
                   selected: isSelected,
                   onSelected: (_) {
                     HapticFeedback.selectionClick();

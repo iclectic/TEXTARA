@@ -14,4 +14,4 @@ Core flows that must work with radios off (manual checklist before store builds)
 Expected residual OS behaviour (not Textara servers):
 
 - System may still prompt to download a TTS voice
-- Google Fonts runtime fetch is **disabled** in `main.dart`
+- Reader fonts are bundled under `assets/fonts/`. Textara does not fetch fonts.

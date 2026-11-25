@@ -96,5 +96,16 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.textara.textara</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>textara</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

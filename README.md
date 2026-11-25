@@ -1,6 +1,44 @@
 # Textara
 
-A premium, DRM-free EPUB and PDF reader built with Flutter. Beautiful, accessible, and fully offline — **completely free**, with no accounts, ads, or paywalls.
+Textara is a private reading app for DRM-free EPUB and PDF books. It is built with Flutter, it runs entirely on the device, and it is free: there is no account, no ad, no subscription, and no copy of your library on a Textara server.
+
+The point of the app is not only to turn pages. You import a book you already own, read it with the typography and accessibility settings that suit you, keep the passages that matter, and gather those passages into Idea Threads you can export. The book, the notes, and the threads stay in the app’s documents folder.
+
+## What you can do
+
+**Bring books in.** Pick EPUB or PDF files from the library, open them from the Files app or another app’s share sheet, or drop them onto the macOS window (and onto the iPad window while Textara is open). Onboarding can also install a short sample EPUB so the first launch is not an empty shelf. Imports are checked for size, extension, and file signature before they are copied into the library. If a book looks like one you already have, Textara asks whether to skip it, replace it, or keep both.
+
+**Find a book or a passage.** The library is a grid or a list. You can sort it, mark favourites, and filter by reading status, format, or collection. Search looks at titles, authors, tags, and the text indexed from EPUBs, and a passage result opens that chapter.
+
+**Read.** EPUB chapters are drawn with Flutter text, not a web view, so type size, line height, margins, alignment, and font are under your control. PDF uses a hardware-accelerated viewer. Progress is saved as you move, without writing to the database on every swipe, and reopening a book returns to that place. The reader can show the table of contents, bookmarks, and notes. On a tablet, the shelf stays beside the open book. On a phone, the book fills the screen.
+
+**Listen.** EPUB chapters can be read aloud with the device’s own text-to-speech voices. There is no cloud voice and no account.
+
+**Keep what you noticed.** A highlight has one of eight colours and an optional note. You can drop it into an existing Idea Thread or start a new one. Deleting a highlight can be undone. Long-pressing a word explains that an offline definition is not available yet; Textara does not send the word anywhere to look it up.
+
+**Think across books.** Idea Threads are the part of Textara that is not just a reader. A thread is a private question or theme. Each piece of evidence is a highlight, with the book it came from and an optional reflection on why it belongs. You can reorder evidence, filter it by book, and write a synthesis note. On a tablet the list of threads stays beside the one you are working in. Local suggestions can point at a thread that has no evidence yet, a note that is not in any thread, or a word that keeps showing up. Every suggestion says why it appeared, and you can turn the whole feature off in Settings. Nothing about this is a network model.
+
+**Leave with your work.** Annotations and threads export to Markdown or PDF. The whole library — books’ metadata, highlights, bookmarks, collections, and threads — exports as a JSON backup, with an optional passphrase so the file is encrypted on disk. Restore is all-or-nothing. Diagnostics can be exported as a log you review yourself; that log does not include book titles or chapter text, and Textara never uploads it.
+
+**Make reading comfortable.** Eight themes ship with the app: Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, and Ember. Settings also has reduced motion, high contrast, a bundled OpenDyslexic face, and a low-stimulation mode that mutes accents and turns off decorative motion and haptics. The other reading fonts (Literata, Merriweather, Lora, Source Serif, Inter, Roboto, Open Sans, and Atkinson Hyperlegible) are in the app as well, so typography does not depend on a font download.
+
+**See that you have been reading.** Settings shows local reading time, books finished, and highlight counts, from sessions stored in SQLite. A daily reading reminder exists, is off until you turn it on, and is scheduled on the device. It is not a push from a server.
+
+## How the app is organised
+
+The first launch is a short onboarding screen. After that, a shell with three destinations is home:
+
+| Destination | What it is |
+|---|---|
+| Library | Shelf, search, filters, collections, and import. On a tablet, the open book sits in a second pane. |
+| Threads | Idea Threads. On a tablet, the selected thread sits beside the list. |
+| Settings | Theme, accessibility, local suggestions, reading stats, the optional reminder, backup, and diagnostics. |
+
+A link of the form `textara://book/<id>` opens a book that is already in the library. The id is the local book id, not an account id.
+
+## What Textara will not do
+
+Textara does not remove DRM, and it will not import a book that fails the file checks. It does not offer accounts, sync to a vendor cloud, social features, ads, or a paid tier. Optional cloud sync is not part of this product. The roadmap in [PLAN.md](PLAN.md) says the same thing.
 
 ## Store listing
 
@@ -15,6 +53,7 @@ Highlight passages, write notes, and weave Idea Threads across books. Export ann
 Your books stay on your device. Your data belongs to you.
 
 **Key features:**
+
 - Read DRM-free EPUB and PDF files
 - 8 reading themes including OLED black and sepia
 - Full typography controls: font, size, spacing, alignment
@@ -69,52 +108,29 @@ dart run flutter_native_splash:create
 
 ## Architecture
 
+The interface renders state and sends commands. Repositories exist where a workflow crosses the database and the filesystem (the library, and backup). Simple record updates still go through the DAO that owns that table.
+
 ```
 lib/
-  core/                     # Constants, theme tokens, local error log
+  core/                     # Constants, layout breakpoint, theme tokens, local error log
   domain/                   # Entities, repository interfaces, local services
   data/                     # SQLite DAOs, repositories, import/export/security
   presentation/             # Riverpod providers, screens, widgets
 ```
 
-See [PLAN.md](PLAN.md) for the free premium-quality roadmap (Milestones 1–8). Schema notes: [docs/architecture/schema.md](docs/architecture/schema.md).
-
 | Decision | Choice | Rationale |
 |---|---|---|
 | **State management** | Riverpod | Type-safe, testable |
-| **Database** | sqflite (SQLite) | Mature, offline, FTS-friendly |
-| **EPUB parsing** | epub_pro | Metadata + content + covers |
+| **Database** | sqflite (SQLite) | Mature, offline, local to the device |
+| **EPUB parsing** | epub_pro | Metadata, content, and covers |
 | **PDF rendering** | pdfrx | Hardware-accelerated |
-| **EPUB rendering** | PageView + SelectableText | Typography / a11y control without WebView |
-| **Theming** | AppTheme + Material 3 | 8 themes + a11y overlays |
+| **EPUB rendering** | PageView + SelectableText | Typography and accessibility without a web view |
+| **Theming** | AppTheme + Material 3 | 8 themes plus accessibility overlays |
+| **Fonts** | Bundled under `assets/fonts/` | Reading works with no network. Licences are in `assets/fonts/licenses/` |
 | **Export** | pdf + Markdown | Offline annotation portability |
+| **Navigation** | App shell + imperative reader routes | Library, Threads, and Settings are the destinations. `textara://book/<id>` and shared files arrive on a platform channel |
 
-## Features
-
-### Library
-- Grid / list, sort, favourites, tags, collections, reading status
-- Search across metadata and EPUB full text
-- Import via picker, share intents, or document open
-
-### Reader
-- EPUB pagination with typography controls and chapter cache
-- PDF viewer with selection
-- Bookmarks, TOC, throttled progress, TTS
-
-### Annotations & Idea Threads
-- Highlights (8 colours) with notes
-- Cross-book Idea Threads, reorder, local insight chips
-- Export to Markdown and PDF
-
-### Themes and accessibility
-- Porcelain, Parchment, Dusk, Midnight, Sage, Rosewood, Ocean, Ember
-- Reduced motion, high contrast, OpenDyslexic, low stimulation
-- Semantics / large-text coverage gated in CI
-
-### Data & trust
-- JSON backup / restore (optional encryption)
-- No accounts, no required network, no default trackers
-- Local diagnostics export only
+Schema notes: [docs/architecture/schema.md](docs/architecture/schema.md). The free-product roadmap, including what was deliberately not built: [PLAN.md](PLAN.md).
 
 ## Testing
 
@@ -126,10 +142,12 @@ flutter test test/a11y/
 flutter test integration_test/knowledge_loop_smoke_test.dart -d flutter-tester
 ```
 
-CI runs format, analyze, tests, and the knowledge-loop smoke on every PR (`.github/workflows/flutter-ci.yml`).
+CI runs format, analyze, tests, and the knowledge-loop smoke on every pull request (`.github/workflows/flutter-ci.yml`).
 
 ## Roadmap
 
-Milestones 1–8 in [PLAN.md](PLAN.md) define the free product: architecture spine, reader quality, design system, Idea Threads, productivity (TTS / share / stats), offline security, a11y quality gates, and store readiness.
+[PLAN.md](PLAN.md) is the source of truth. Milestones 1–8 — architecture, the reader, the design system, Idea Threads, text-to-speech and sharing, offline security, accessibility gates, and store-readiness docs — are in the tree.
 
-**Non-goals forever for this plan:** subscriptions, freemium gates, mandatory cloud sync, ads, or Pro upsell UI.
+What is still a human step before a store upload: screenshots, the Play and App Store listings, and a signed release build. See [docs/release/store-readiness.md](docs/release/store-readiness.md) and [docs/release/release-signing.md](docs/release/release-signing.md).
+
+**Not part of this product:** subscriptions, freemium gates, a mandatory cloud, ads, or a Pro upsell.

@@ -22,7 +22,16 @@ class ReaderScreen extends ConsumerStatefulWidget {
   final Book book;
   final String? initialChapterId;
 
-  const ReaderScreen({super.key, required this.book, this.initialChapterId});
+  /// When set, the reader is embedded (tablet pane) and Back calls this
+  /// instead of popping a route.
+  final VoidCallback? onClose;
+
+  const ReaderScreen({
+    super.key,
+    required this.book,
+    this.initialChapterId,
+    this.onClose,
+  });
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -73,6 +82,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
     unawaited(_progressWriter.flush());
     _progressWriter.dispose();
     unawaited(_endSession());
+    unawaited(ref.read(ttsStateProvider.notifier).stop());
     super.dispose();
   }
 
@@ -278,7 +288,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen>
                     onBack: () async {
                       await _progressWriter.flush();
                       await _endSession();
-                      if (context.mounted) {
+                      if (!context.mounted) return;
+                      final close = widget.onClose;
+                      if (close != null) {
+                        close();
+                      } else {
                         Navigator.of(context).pop();
                       }
                     },

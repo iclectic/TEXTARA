@@ -5,6 +5,12 @@ class AppConstants {
   static const String appTagline = 'Your books, beautifully read.';
   static const String appVersion = '1.0.0';
 
+  /// Shortest window side that switches Library and Threads to two panes.
+  static const double tabletShortestSide = 600;
+
+  /// Platform channel for shared files, document opens, and book links.
+  static const String incomingChannel = 'com.textara.textara/incoming';
+
   static const int maxLibrarySize = 10000;
   static const int coverCacheSize = 500;
   static const int searchResultLimit = 50;

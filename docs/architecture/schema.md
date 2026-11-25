@@ -35,7 +35,7 @@ FK `book_id` → `books(id)` ON DELETE CASCADE.
 Many-to-many book ↔ collection.
 
 ### `full_text_search`
-Plain table of chapter text for EPUB (LIKE search today; FTS5 upgrade tracked in PLAN.md).
+Plain table of chapter text for EPUB. Search uses `LOWER(content) LIKE` and ranks hits in `BookDao.searchLibrary`. FTS5 was evaluated and not adopted: excerpts and rank are computed in Dart, and a virtual table would need a rebuild on every chapter write without changing the `SearchResult` the library already shows.
 
 | Column | Type |
 |---|---|
